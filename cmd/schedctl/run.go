@@ -1,15 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
-	"github.com/opencontainers/umoci"
-	"github.com/opencontainers/umoci/oci/cas/dir"
-	"github.com/opencontainers/umoci/oci/casext"
-	"github.com/opencontainers/umoci/oci/layer"
 
-	"github.com/google/go-containerregistry/pkg/crane"
-	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/containerd/containerd"
+	"github.com/containerd/containerd/cio"
+	"github.com/containerd/containerd/namespaces"
+	"github.com/containerd/containerd/oci"
 
 	"github.com/spf13/cobra"
 )
@@ -25,43 +23,101 @@ func NewRunCmd() *cobra.Command {
 }
 
 func run(cmd *cobra.Command, arguments []string) error {
+	cleanup()
+
 	src := cmd.Flags().Args()[0]
-	bundlePath := "kekw2"
+	// Create a new context with namespace
+	ctx := namespaces.WithNamespace(context.Background(), "schedulers")
 
-	opt := crane.GetOptions()
-
-	ref, err := name.ParseReference(src, opt.Name...)
+	// Create a new containerd client
+	client, err := containerd.New("/run/containerd/containerd.sock")
 	if err != nil {
-		return fmt.Errorf("parsing reference %q: %w", src, err)
+		return fmt.Errorf("failed to create client: %w", err)
+	}
+	defer client.Close()
+
+	// Get the image reference
+
+	// Pull the image
+	img, err := client.Pull(ctx, src, containerd.WithPullUnpack)
+	if err != nil {
+		return fmt.Errorf("failed to pull image: %w", err)
 	}
 
-	img, err := remote.Image(ref, opt.Remote...)
-
+	// Create a new container
+	container, err := client.NewContainer(
+		ctx,
+		"demo-container",
+		containerd.WithNewSnapshot("demo-snapshot", img),
+		containerd.WithNewSpec(oci.WithImageConfig(img), oci.WithPrivileged),
+	)
 	if err != nil {
-		return fmt.Errorf("error: %w", err)
+		return fmt.Errorf("failed to create container: %w", err)
+	}
+	defer container.Delete(ctx, containerd.WithSnapshotCleanup)
+
+	// Create a task
+	task, err := container.NewTask(ctx, cio.NewCreator(cio.WithStdio))
+	if err != nil {
+		return fmt.Errorf("failed to create task: %w", err)
+	}
+	defer task.Delete(ctx)
+
+	// Start the task
+	if err := task.Start(ctx); err != nil {
+		return fmt.Errorf("failed to start task: %w", err)
 	}
 
-	size, _ := img.Size()
+	fmt.Println("Task started, PID:", task.Pid())
 
-	fmt.Println("%v", size)
-
-	crane.SaveOCI(img, "kekw")
-
-	var unpackOptions layer.UnpackOptions
-	var meta umoci.Meta
-	meta.Version = umoci.MetaVersion
-	meta.Version = umoci.MetaVersion
-
-	engine, err := dir.Open("kekw")
+	// Wait for the task to exit
+	exitStatusC, err := task.Wait(ctx)
 	if err != nil {
-		return fmt.Errorf("open CAS: %w", err)
+		return fmt.Errorf("failed to wait for task: %w", err)
 	}
-	engineExt := casext.NewEngine(engine)
-	defer engine.Close()
-        err = umoci.Unpack(engineExt, "latest", bundlePath, unpackOptions)
+
+	// Get the exit status
+	status := <-exitStatusC
+	code, _, err := status.Result()
 	if err != nil {
-		fmt.Println("Error unpacking image:", err)
-		return nil
+		return fmt.Errorf("failed to get exit status: %w", err)
+	}
+
+	if code != 0 {
+		return fmt.Errorf("container exited with status: %d", code)
+	}
+
+	return nil
+}
+
+func cleanup() error {
+	// Create a new context with namespace
+	ctx := namespaces.WithNamespace(context.Background(), "schedulers")
+
+	// Create a new containerd client
+	client, err := containerd.New("/run/containerd/containerd.sock")
+	if err != nil {
+		return fmt.Errorf("failed to create client: %w", err)
+	}
+	defer client.Close()
+
+	// Get the snapshotter
+	snapshotter := client.SnapshotService("overlayfs")
+
+	// Remove the snapshot
+	if err := snapshotter.Remove(ctx, "demo-snapshot"); err != nil {
+		return fmt.Errorf("failed to remove snapshot: %w", err)
+	}
+
+	fmt.Println("Successfully removed demo-snapshot")
+
+	container, err := client.LoadContainer(ctx, "demo-container")
+	if err != nil {
+		fmt.Errorf("failed to load container: %w", err)
+	}
+
+	if err := container.Delete(ctx, containerd.WithSnapshotCleanup); err != nil {
+		fmt.Errorf("failed to delete container: %w", err)
 	}
 
 	return nil
