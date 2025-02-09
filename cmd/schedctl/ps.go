@@ -8,17 +8,17 @@ import (
 	"schedctl/internal/containerd"
 )
 
-func NewListCmd() *cobra.Command {
-	startCmd := &cobra.Command{
-		Use:   "list",
+func NewPsCmd() *cobra.Command {
+	psCmd := &cobra.Command{
+		Use:   "ps",
 		Short: "list running schedulers",
-		RunE:  list,
+		RunE:  ps,
 	}
 
-	return startCmd
+	return psCmd
 }
 
-func list(cmd *cobra.Command, arguments []string) error {
+func ps(cmd *cobra.Command, arguments []string) error {
 	containersList, err := containerd.List()
 	if err != nil {
 		panic(err)

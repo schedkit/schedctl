@@ -18,7 +18,7 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	rootCmd.AddCommand(NewRunCmd())
-	rootCmd.AddCommand(NewListCmd())
+	rootCmd.AddCommand(NewPsCmd())
 	rootCmd.AddCommand(NewStopCmd())
 	// TODO status
 
