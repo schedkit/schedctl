@@ -1,13 +1,7 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/cio"
-	"github.com/containerd/containerd/namespaces"
-	"github.com/containerd/containerd/oci"
+	"schedctl/internal/containerd"
 
 	"github.com/spf13/cobra"
 )
@@ -24,70 +18,11 @@ func NewRunCmd() *cobra.Command {
 
 func run(cmd *cobra.Command, arguments []string) error {
 	src := cmd.Flags().Args()[0]
-	// Create a new context with namespace
-	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
 
-	// Create a new containerd client
-	client, err := containerd.New("/run/containerd/containerd.sock")
+	err := containerd.Run(src, "demo-container")
 	if err != nil {
-		return fmt.Errorf("failed to create client: %w", err)
-	}
-	defer client.Close()
-
-	// Get the image reference
-
-	// Pull the image
-	img, err := client.Pull(ctx, src, containerd.WithPullUnpack)
-	if err != nil {
-		return fmt.Errorf("failed to pull image: %w", err)
-	}
-
-	// Create a new container
-	container, err := client.NewContainer(
-		ctx,
-		"demo-container",
-		containerd.WithNewSnapshot("demo-snapshot", img),
-		containerd.WithNewSpec(oci.WithImageConfig(img), oci.WithPrivileged),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create container: %w", err)
-	}
-	defer container.Delete(ctx, containerd.WithSnapshotCleanup)
-
-	// Create a task
-	task, err := container.NewTask(ctx, cio.NewCreator(cio.WithStdio))
-	if err != nil {
-		return fmt.Errorf("failed to create task: %w", err)
-	}
-	defer task.Delete(ctx)
-
-	// Start the task
-	if err := task.Start(ctx); err != nil {
-		return fmt.Errorf("failed to start task: %w", err)
-	}
-
-	fmt.Println("Task started, PID:", task.Pid())
-
-	// Wait for the task to exit
-	exitStatusC, err := task.Wait(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to wait for task: %w", err)
-	}
-
-	// Get the exit status
-	status := <-exitStatusC
-	code, _, err := status.Result()
-	if err != nil {
-		return fmt.Errorf("failed to get exit status: %w", err)
-	}
-
-	if code != 0 {
-		return fmt.Errorf("container exited with status: %d", code)
+		return err
 	}
 
 	return nil
-}
-
-func BoolPointer(b bool) *bool {
-	return &b
 }
