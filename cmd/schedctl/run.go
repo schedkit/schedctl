@@ -23,11 +23,9 @@ func NewRunCmd() *cobra.Command {
 }
 
 func run(cmd *cobra.Command, arguments []string) error {
-	cleanup()
-
 	src := cmd.Flags().Args()[0]
 	// Create a new context with namespace
-	ctx := namespaces.WithNamespace(context.Background(), "schedulers")
+	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
 
 	// Create a new containerd client
 	client, err := containerd.New("/run/containerd/containerd.sock")
@@ -85,39 +83,6 @@ func run(cmd *cobra.Command, arguments []string) error {
 
 	if code != 0 {
 		return fmt.Errorf("container exited with status: %d", code)
-	}
-
-	return nil
-}
-
-func cleanup() error {
-	// Create a new context with namespace
-	ctx := namespaces.WithNamespace(context.Background(), "schedulers")
-
-	// Create a new containerd client
-	client, err := containerd.New("/run/containerd/containerd.sock")
-	if err != nil {
-		return fmt.Errorf("failed to create client: %w", err)
-	}
-	defer client.Close()
-
-	// Get the snapshotter
-	snapshotter := client.SnapshotService("overlayfs")
-
-	// Remove the snapshot
-	if err := snapshotter.Remove(ctx, "demo-snapshot"); err != nil {
-		return fmt.Errorf("failed to remove snapshot: %w", err)
-	}
-
-	fmt.Println("Successfully removed demo-snapshot")
-
-	container, err := client.LoadContainer(ctx, "demo-container")
-	if err != nil {
-		fmt.Errorf("failed to load container: %w", err)
-	}
-
-	if err := container.Delete(ctx, containerd.WithSnapshotCleanup); err != nil {
-		fmt.Errorf("failed to delete container: %w", err)
 	}
 
 	return nil
