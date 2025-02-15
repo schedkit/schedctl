@@ -25,7 +25,7 @@ func ps(cmd *cobra.Command, arguments []string) error {
 	}
 
 	for _, container := range containersList {
-		fmt.Printf("pid: %s, id: %s, name: %s", container.PID, container.ID, container.Name)
+		fmt.Printf("pid: %d, id: %s, name: %s", container.PID, container.ID, container.Name)
 	}
 
 	return nil
