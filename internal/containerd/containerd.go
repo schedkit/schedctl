@@ -105,8 +105,6 @@ func Run(image, id string) error {
 	}
 	defer client.Close()
 
-	// Get the image reference
-
 	// Pull the image
 	img, err := client.Pull(ctx, image, containerd.WithPullUnpack)
 	if err != nil {
@@ -117,7 +115,7 @@ func Run(image, id string) error {
 	container, err := client.NewContainer(
 		ctx,
 		id,
-		containerd.WithNewSnapshot("demo-snapshot", img),
+		containerd.WithNewSnapshot(fmt.Sprintf("%s-snapshot\n", id), img),
 		containerd.WithNewSpec(oci.WithImageConfig(img), oci.WithPrivileged),
 	)
 	if err != nil {
@@ -133,7 +131,8 @@ func Run(image, id string) error {
 	defer task.Delete(ctx)
 
 	// Start the task
-	if err := task.Start(ctx); err != nil {
+	err = task.Start(ctx)
+	if err != nil {
 		return fmt.Errorf("failed to start task: %w", err)
 	}
 
