@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"schedctl/internal/containerd"
+	"schedctl/internal/schedulers"
 
 	"github.com/spf13/cobra"
 )
@@ -17,9 +18,14 @@ func NewRunCmd() *cobra.Command {
 }
 
 func run(cmd *cobra.Command, arguments []string) error {
-	src := cmd.Flags().Args()[0]
+	schedulerId := cmd.Flags().Args()[0]
 
-	err := containerd.Run(src, "demo-container")
+	image, err := schedulers.GetScheduler(schedulerId)
+	if err != nil {
+		return err
+	}
+
+	err = containerd.Run(image, schedulerId)
 	if err != nil {
 		return err
 	}
