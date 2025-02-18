@@ -2,7 +2,7 @@ package schedulers
 
 import "errors"
 
-func list() map[string]string {
+func List() map[string]string {
 	return map[string]string{
 		"scx_rusty": "ghcr.io/schedkit/scx_rusty:latest",
 	}
@@ -11,7 +11,7 @@ func list() map[string]string {
 func GetScheduler(id string) (string, error) {
 	var image string
 
-	for key, value := range list() {
+	for key, value := range List() {
 		if key == id {
 			image = value
 		}
