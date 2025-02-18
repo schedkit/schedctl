@@ -11,7 +11,7 @@ import (
 func TestSchedulerFound(t *testing.T) {
 	schedulerImage, err := schedulers.GetScheduler("scx_rusty")
 	assert.Nil(t, err)
-        assert.Equal(t, "ghcr.io/schedkit/scheds/scx_rusty:latest", schedulerImage)
+	assert.Equal(t, "ghcr.io/schedkit/scx_rusty:latest", schedulerImage)
 }
 
 func TestSchedulerNotFound(t *testing.T) {

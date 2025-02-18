@@ -4,7 +4,7 @@ import "errors"
 
 func list() map[string]string {
 	return map[string]string{
-          "scx_rusty": "ghcr.io/schedkit/scheds/scx_rusty:latest",
+		"scx_rusty": "ghcr.io/schedkit/scx_rusty:latest",
 	}
 }
 
