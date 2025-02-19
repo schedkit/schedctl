@@ -1,0 +1,51 @@
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    # - asasalint
+    - containedctx
+    # - cyclop
+    # - depguard
+    - dogsled
+    - dupl
+    - durationcheck
+    - errchkjson
+    - errorlint
+    - exhaustive
+    - copyloopvar
+    - forbidigo
+    - forcetypeassert
+    - gochecknoglobals
+    # - gocognit
+    - goconst
+    - gocritic
+    - gofmt
+    - gomoddirectives
+    - gomodguard
+    - gosec
+    - importas
+    - lll
+    - misspell
+    - nilerr
+    - nilnil
+    - nonamedreturns
+    - prealloc
+    - predeclared
+    - revive
+    - unconvert
+    - unparam
+    - wastedassign
+    - testpackage
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - lll
+
