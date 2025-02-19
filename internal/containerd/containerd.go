@@ -94,7 +94,7 @@ func Stop(containerId string) error {
 	return nil
 }
 
-func Run(image, id string) error {
+func Run(image, id string, attach bool) error {
 	// Create a new context with namespace
 	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
 
@@ -103,7 +103,7 @@ func Run(image, id string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create client: %w", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	// Pull the image
 	img, err := client.Pull(ctx, image, containerd.WithPullUnpack)
@@ -121,14 +121,14 @@ func Run(image, id string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create container: %w", err)
 	}
-	defer container.Delete(ctx, containerd.WithSnapshotCleanup)
+	defer func() { _ = container.Delete(ctx, containerd.WithSnapshotCleanup) }()
 
 	// Create a task
 	task, err := container.NewTask(ctx, cio.NewCreator(cio.WithStdio))
 	if err != nil {
 		return fmt.Errorf("failed to create task: %w", err)
 	}
-	defer task.Delete(ctx)
+	defer func() { _, _ = task.Delete(ctx) }()
 
 	// Start the task
 	err = task.Start(ctx)
@@ -138,21 +138,23 @@ func Run(image, id string) error {
 
 	fmt.Println("Task started, PID:", task.Pid())
 
-	// Wait for the task to exit
-	exitStatusC, err := task.Wait(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to wait for task: %w", err)
-	}
+	if attach {
+		// Wait for the task to exit
+		exitStatusC, err := task.Wait(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to wait for task: %w", err)
+		}
 
-	// Get the exit status
-	status := <-exitStatusC
-	code, _, err := status.Result()
-	if err != nil {
-		return fmt.Errorf("failed to get exit status: %w", err)
-	}
+		// Get the exit status
+		status := <-exitStatusC
+		code, _, err := status.Result()
+		if err != nil {
+			return fmt.Errorf("failed to get exit status: %w", err)
+		}
 
-	if code != 0 {
-		return fmt.Errorf("container exited with status: %d", code)
+		if code != 0 {
+			return fmt.Errorf("container exited with status: %d", code)
+		}
 	}
 
 	return nil
