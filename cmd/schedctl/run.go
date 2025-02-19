@@ -8,16 +8,22 @@ import (
 )
 
 func NewRunCmd() *cobra.Command {
+	var Attach bool
+
 	startCmd := &cobra.Command{
 		Use:   "run",
 		Short: "Run a specific scheduler",
-		RunE:  run,
+		RunE: func(cmd *cobra.Command, arguments []string) error {
+			return run(cmd, arguments, Attach)
+		},
 	}
+
+	startCmd.Flags().BoolVarP(&Attach, "attach", "a", false, "attach to the current process instead of detaching")
 
 	return startCmd
 }
 
-func run(cmd *cobra.Command, arguments []string) error {
+func run(cmd *cobra.Command, _ []string, attach bool) error {
 	schedulerId := cmd.Flags().Args()[0]
 
 	image, err := schedulers.GetScheduler(schedulerId)
@@ -25,7 +31,7 @@ func run(cmd *cobra.Command, arguments []string) error {
 		return err
 	}
 
-	err = containerd.Run(image, schedulerId)
+	err = containerd.Run(image, schedulerId, attach)
 	if err != nil {
 		return err
 	}
