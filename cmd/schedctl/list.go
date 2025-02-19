@@ -19,7 +19,7 @@ func NewListCmd() *cobra.Command {
 }
 
 func list(cmd *cobra.Command, arguments []string) error {
-	for key, _ := range schedulers.List() {
+	for key := range schedulers.List() {
 		fmt.Printf("%s\n", key)
 	}
 
