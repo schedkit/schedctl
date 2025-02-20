@@ -10,6 +10,7 @@ import (
 	"github.com/containerd/containerd/oci"
 
 	"schedctl/internal/containers"
+	"schedctl/internal/output"
 )
 
 func List() ([]containers.Container, error) {
@@ -53,7 +54,7 @@ func List() ([]containers.Container, error) {
 	return listedContainers, nil
 }
 
-func Stop(containerId string) error {
+func Stop(containerID string) error {
 	client, err := containerd.New("/run/containerd/containerd.sock")
 	if err != nil {
 		return fmt.Errorf("failed to create client: %w", err)
@@ -62,7 +63,7 @@ func Stop(containerId string) error {
 
 	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
 
-	container, err := client.LoadContainer(ctx, containerId)
+	container, err := client.LoadContainer(ctx, containerID)
 	if err != nil {
 		return fmt.Errorf("failed to load container: %w", err)
 	}
@@ -75,7 +76,7 @@ func Stop(containerId string) error {
 	_ = task.Kill(ctx, 9) // SIGKILL all the things
 	exitChan, err := task.Wait(ctx)
 	if err != nil {
-		fmt.Printf("Failed waiting for the task to exit")
+		_, _ = output.Out("Failed waiting for the task to exit")
 	}
 	<-exitChan
 
@@ -89,7 +90,7 @@ func Stop(containerId string) error {
 		return fmt.Errorf("failed to delete container: %w", err)
 	}
 
-	fmt.Printf("Scheduler %s stopped successfully \n", containerId)
+	_, _ = output.Out("Scheduler %s stopped successfully \n", containerID)
 
 	return nil
 }
@@ -136,7 +137,7 @@ func Run(image, id string, attach bool) error {
 		return fmt.Errorf("failed to start task: %w", err)
 	}
 
-	fmt.Println("Task started, PID:", task.Pid())
+	_, _ = output.Out("Task started, PID: %d\n", task.Pid())
 
 	if attach {
 		// Wait for the task to exit

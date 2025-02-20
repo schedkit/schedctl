@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
+	"schedctl/internal/output"
 	"schedctl/internal/schedulers"
 )
 
@@ -18,9 +17,9 @@ func NewListCmd() *cobra.Command {
 	return listCmd
 }
 
-func list(cmd *cobra.Command, arguments []string) error {
+func list(cmd *cobra.Command, _ []string) error {
 	for key := range schedulers.List() {
-		fmt.Printf("%s\n", key)
+		_, _ = output.Out("%s\n", key)
 	}
 
 	return nil
