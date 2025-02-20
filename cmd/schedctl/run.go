@@ -24,14 +24,14 @@ func NewRunCmd() *cobra.Command {
 }
 
 func run(cmd *cobra.Command, _ []string, attach bool) error {
-	schedulerId := cmd.Flags().Args()[0]
+	schedulerID := cmd.Flags().Args()[0]
 
-	image, err := schedulers.GetScheduler(schedulerId)
+	image, err := schedulers.GetScheduler(schedulerID)
 	if err != nil {
 		return err
 	}
 
-	err = containerd.Run(image, schedulerId, attach)
+	err = containerd.Run(image, schedulerID, attach)
 	if err != nil {
 		return err
 	}

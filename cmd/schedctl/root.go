@@ -14,7 +14,7 @@ func NewRootCmd() *cobra.Command {
 		Use:   "schedctl",
 		Short: "Plug and play bpf schedulers for fun and profit",
 		Long:  `Plug and play bpf schedulers for fun and profit`,
-		Run:   func(cmd *cobra.Command, args []string) {},
+		Run:   func(_ *cobra.Command, _ []string) {},
 	}
 
 	rootCmd.AddCommand(NewRunCmd())

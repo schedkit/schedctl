@@ -18,13 +18,12 @@ func NewStopCmd() *cobra.Command {
 	return stopCmd
 }
 
-func stop(cmd *cobra.Command, arguments []string) error {
+func stop(cmd *cobra.Command, _ []string) error {
 	id := cmd.Flags().Args()[0]
 
 	err := containerd.Stop(id)
 	if err != nil {
-		fmt.Errorf("failed to stop the container: %v", err)
-		return err
+		return fmt.Errorf("failed to stop the container: %w", err)
 	}
 
 	return nil

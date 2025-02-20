@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"schedctl/internal/containerd"
+	"schedctl/internal/output"
 )
 
 func NewPsCmd() *cobra.Command {
@@ -18,14 +17,14 @@ func NewPsCmd() *cobra.Command {
 	return psCmd
 }
 
-func ps(cmd *cobra.Command, arguments []string) error {
+func ps(_ *cobra.Command, _ []string) error {
 	containersList, err := containerd.List()
 	if err != nil {
 		panic(err)
 	}
 
 	for _, container := range containersList {
-		fmt.Printf("pid: %d, id: %s, name: %s", container.PID, container.ID, container.Name)
+		_, _ = output.Out("pid: %d, id: %s, name: %s", container.PID, container.ID, container.Name)
 	}
 
 	return nil

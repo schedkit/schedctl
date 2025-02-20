@@ -18,7 +18,7 @@ func GetScheduler(id string) (string, error) {
 	}
 
 	if len(image) == 0 {
-		return "", errors.New("scheduler not found!")
+		return "", errors.New("scheduler not found")
 	}
 
 	return image, nil

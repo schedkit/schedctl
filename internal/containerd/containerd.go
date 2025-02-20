@@ -10,6 +10,7 @@ import (
 	"github.com/containerd/containerd/oci"
 
 	"schedctl/internal/containers"
+	"schedctl/internal/output"
 )
 
 func List() ([]containers.Container, error) {
@@ -53,7 +54,7 @@ func List() ([]containers.Container, error) {
 	return listedContainers, nil
 }
 
-func Stop(containerId string) error {
+func Stop(containerID string) error {
 	client, err := containerd.New("/run/containerd/containerd.sock")
 	if err != nil {
 		return fmt.Errorf("failed to create client: %w", err)
@@ -62,7 +63,7 @@ func Stop(containerId string) error {
 
 	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
 
-	container, err := client.LoadContainer(ctx, containerId)
+	container, err := client.LoadContainer(ctx, containerID)
 	if err != nil {
 		return fmt.Errorf("failed to load container: %w", err)
 	}
@@ -75,7 +76,7 @@ func Stop(containerId string) error {
 	_ = task.Kill(ctx, 9) // SIGKILL all the things
 	exitChan, err := task.Wait(ctx)
 	if err != nil {
-		fmt.Printf("Failed waiting for the task to exit")
+		_, _ = output.Out("Failed waiting for the task to exit")
 	}
 	<-exitChan
 
@@ -89,12 +90,12 @@ func Stop(containerId string) error {
 		return fmt.Errorf("failed to delete container: %w", err)
 	}
 
-	fmt.Printf("Scheduler %s stopped successfully \n", containerId)
+	_, _ = output.Out("Scheduler %s stopped successfully \n", containerID)
 
 	return nil
 }
 
-func Run(image, id string) error {
+func Run(image, id string, attach bool) error {
 	// Create a new context with namespace
 	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
 
@@ -103,7 +104,7 @@ func Run(image, id string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create client: %w", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	// Pull the image
 	img, err := client.Pull(ctx, image, containerd.WithPullUnpack)
@@ -121,14 +122,14 @@ func Run(image, id string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create container: %w", err)
 	}
-	defer container.Delete(ctx, containerd.WithSnapshotCleanup)
+	defer func() { _ = container.Delete(ctx, containerd.WithSnapshotCleanup) }()
 
 	// Create a task
 	task, err := container.NewTask(ctx, cio.NewCreator(cio.WithStdio))
 	if err != nil {
 		return fmt.Errorf("failed to create task: %w", err)
 	}
-	defer task.Delete(ctx)
+	defer func() { _, _ = task.Delete(ctx) }()
 
 	// Start the task
 	err = task.Start(ctx)
@@ -136,23 +137,25 @@ func Run(image, id string) error {
 		return fmt.Errorf("failed to start task: %w", err)
 	}
 
-	fmt.Println("Task started, PID:", task.Pid())
+	_, _ = output.Out("Task started, PID: %d\n", task.Pid())
 
-	// Wait for the task to exit
-	exitStatusC, err := task.Wait(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to wait for task: %w", err)
-	}
+	if attach {
+		// Wait for the task to exit
+		exitStatusC, err := task.Wait(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to wait for task: %w", err)
+		}
 
-	// Get the exit status
-	status := <-exitStatusC
-	code, _, err := status.Result()
-	if err != nil {
-		return fmt.Errorf("failed to get exit status: %w", err)
-	}
+		// Get the exit status
+		status := <-exitStatusC
+		code, _, err := status.Result()
+		if err != nil {
+			return fmt.Errorf("failed to get exit status: %w", err)
+		}
 
-	if code != 0 {
-		return fmt.Errorf("container exited with status: %d", code)
+		if code != 0 {
+			return fmt.Errorf("container exited with status: %d", code)
+		}
 	}
 
 	return nil
