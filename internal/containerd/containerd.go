@@ -13,18 +13,20 @@ import (
 	"schedctl/internal/output"
 )
 
-func List() ([]containers.Container, error) {
-	// Create a new context with namespace
-	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
-
-	listedContainers := []containers.Container{}
-
-	// Create a new containerd client
+func NewClient() (*containerd.Client, error) {
 	client, err := containerd.New("/run/containerd/containerd.sock")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
-	defer client.Close()
+
+	return client, nil
+}
+
+func List(client *containerd.Client) ([]containers.Container, error) {
+	// Create a new context with namespace
+	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
+
+	listedContainers := []containers.Container{}
 
 	// List all containers in the specified namespace
 	containerdContainers, err := client.Containers(ctx)
