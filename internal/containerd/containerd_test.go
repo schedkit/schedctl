@@ -10,22 +10,21 @@ import (
 
 func TestContainerdSpawnStopProcess(t *testing.T) {
 	client, err := containerd.NewClient()
-        assert.Nil(t, err)
-        
-        containers, err := containerd.List(client)
 	assert.Nil(t, err)
 
-        assert.Equal(t,0 , len(containers))
-
-        err = containerd.Run("ghcr.io/schedkit/scx_rusty:latest", "test-scheduler", false)
-        assert.Nil(t, err)
-
-        containers, err = containerd.List(client)
+	containers, err := containerd.List(client)
 	assert.Nil(t, err)
 
-        assert.Equal(t,1 , len(containers))
+	assert.Equal(t, 0, len(containers))
 
-        err = containerd.Stop("test-scheduler")
+	err = containerd.Run(client, "ghcr.io/schedkit/scx_rusty:latest", "test-scheduler", false)
+	assert.Nil(t, err)
+
+	containers, err = containerd.List(client)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 1, len(containers))
+
+	err = containerd.Stop(client, "test-scheduler")
 	assert.Nil(t, err)
 }
-

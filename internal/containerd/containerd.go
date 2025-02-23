@@ -14,7 +14,8 @@ import (
 )
 
 func NewClient() (*containerd.Client, error) {
-	client, err := containerd.New("/run/containerd/containerd.sock")
+	// TODO make this configurable
+	client, err := containerd.New("/run/user/1000/containerd/containerd.sock")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
@@ -56,13 +57,7 @@ func List(client *containerd.Client) ([]containers.Container, error) {
 	return listedContainers, nil
 }
 
-func Stop(containerID string) error {
-	client, err := containerd.New("/run/containerd/containerd.sock")
-	if err != nil {
-		return fmt.Errorf("failed to create client: %w", err)
-	}
-	defer client.Close()
-
+func Stop(client *containerd.Client, containerID string) error {
 	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
 
 	container, err := client.LoadContainer(ctx, containerID)
@@ -97,16 +92,9 @@ func Stop(containerID string) error {
 	return nil
 }
 
-func Run(image, id string, attach bool) error {
+func Run(client *containerd.Client, image, id string, attach bool) error {
 	// Create a new context with namespace
 	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
-
-	// Create a new containerd client
-	client, err := containerd.New("/run/containerd/containerd.sock")
-	if err != nil {
-		return fmt.Errorf("failed to create client: %w", err)
-	}
-	defer func() { _ = client.Close() }()
 
 	// Pull the image
 	img, err := client.Pull(ctx, image, containerd.WithPullUnpack)

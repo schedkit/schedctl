@@ -21,7 +21,13 @@ func NewStopCmd() *cobra.Command {
 func stop(cmd *cobra.Command, _ []string) error {
 	id := cmd.Flags().Args()[0]
 
-	err := containerd.Stop(id)
+	client, err := containerd.NewClient()
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	err = containerd.Stop(client, id)
 	if err != nil {
 		return fmt.Errorf("failed to stop the container: %w", err)
 	}
