@@ -13,6 +13,9 @@ Name=enp0s3
 [Network]
 DHCP=yes" | sudo tee rootfs/etc/systemd/network/20-wired.network
 
+echo "nameserver 1.1.1.1
+nameserver 8.8.8.8" | sudo tee rootfs/etc/resolv.conf
+
 sudo sed -i '/^root/ { s/:x:/::/ }' rootfs/etc/passwd
 sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' rootfs/etc/ssh/sshd_config
 sudo sed -i 's/#PermitEmptyPasswords no/PermitEmptyPasswords yes/' rootfs/etc/ssh/sshd_config
