@@ -18,7 +18,13 @@ func NewPsCmd() *cobra.Command {
 }
 
 func ps(_ *cobra.Command, _ []string) error {
-	containersList, err := containerd.List()
+	client, err := containerd.NewClient()
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	containersList, err := containerd.List(client)
 	if err != nil {
 		panic(err)
 	}

@@ -26,12 +26,18 @@ func NewRunCmd() *cobra.Command {
 func run(cmd *cobra.Command, _ []string, attach bool) error {
 	schedulerID := cmd.Flags().Args()[0]
 
+	client, err := containerd.NewClient()
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
 	image, err := schedulers.GetScheduler(schedulerID)
 	if err != nil {
 		return err
 	}
 
-	err = containerd.Run(image, schedulerID, attach)
+	err = containerd.Run(client, image, schedulerID, attach)
 	if err != nil {
 		return err
 	}
