@@ -11,12 +11,11 @@ if [ -z "$kernel_version" ]; then
 fi
 
 echo "Getting kernel source for version $kernel_version"
-git clone --depth 1 --branch "$kernel_version" https://github.com/torvalds/linux.git kernel_source
+git clone --depth 1 --branch "$kernel_version" git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git kernel_source
 
 echo "Configuring kernel"
 cd kernel_source
-make x86_64_defconfig
-make kvm_guest.config
+cp ../config .config
 
 echo "Building kernel"
 make -j$(nproc) bzImage

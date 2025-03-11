@@ -1,11 +1,11 @@
 #!/bin/sh
 
-dd if=/dev/zero of=rootfs.raw bs=1G count=1
+dd if=/dev/zero of=rootfs.raw bs=1536MB count=1
 mkfs.ext4 rootfs.raw
 sudo losetup -fP rootfs.raw
 mkdir rootfs
 sudo mount /dev/loop0 rootfs
-sudo pacstrap -c rootfs base openssh containerd podman
+sudo pacstrap -c rootfs base openssh containerd nerdctl podman cni-plugins
 
 echo "[Match]
 Name=enp0s3
