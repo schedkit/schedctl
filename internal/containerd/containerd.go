@@ -14,8 +14,8 @@ import (
 )
 
 func NewClient() (*containerd.Client, error) {
-	// TODO make this configurable
-	client, err := containerd.New("/run/user/1000/containerd/containerd.sock")
+	// TODO make this configurable if needed
+	client, err := containerd.New("/run/containerd/containerd.sock")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
@@ -92,7 +92,7 @@ func Stop(client *containerd.Client, containerID string) error {
 	return nil
 }
 
-func Run(client *containerd.Client, image, id string, attach bool) error {
+func Run(client *containerd.Client, image, id string, attach bool, privileged bool) error {
 	// Create a new context with namespace
 	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
 
@@ -102,12 +102,20 @@ func Run(client *containerd.Client, image, id string, attach bool) error {
 		return fmt.Errorf("failed to pull image: %w", err)
 	}
 
+	var specOption containerd.NewContainerOpts
+	if privileged {
+		specOption = containerd.WithNewSpec(oci.WithImageConfig(img), oci.WithPrivileged)
+
+	} else {
+		specOption = containerd.WithNewSpec(oci.WithImageConfig(img))
+	}
+
 	// Create a new container
 	container, err := client.NewContainer(
 		ctx,
 		id,
 		containerd.WithNewSnapshot(fmt.Sprintf("%s-snapshot\n", id), img),
-		containerd.WithNewSpec(oci.WithImageConfig(img), oci.WithPrivileged),
+		specOption,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create container: %w", err)
