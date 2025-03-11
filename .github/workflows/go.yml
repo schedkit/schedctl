@@ -15,11 +15,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        lfs: true
 
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.23'
+
+    - name: Install QEMU/KVM
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install qemu-system qemu-kvm
+
+    - name: Enable KVM group perms
+      run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
 
     - name: Build
       run: go build -v ./...
