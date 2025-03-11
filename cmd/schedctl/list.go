@@ -17,7 +17,7 @@ func NewListCmd() *cobra.Command {
 	return listCmd
 }
 
-func list(cmd *cobra.Command, _ []string) error {
+func list(_ *cobra.Command, _ []string) error {
 	for key := range schedulers.List() {
 		_, _ = output.Out("%s\n", key)
 	}

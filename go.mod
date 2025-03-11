@@ -3,9 +3,12 @@ module schedctl
 go 1.23.5
 
 require (
+	github.com/anatol/vmtest v0.0.0-20230711210602-87511df0d4bc
 	github.com/containerd/containerd v1.7.25
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
+	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
+	golang.org/x/crypto v0.31.0
 )
 
 require (
@@ -33,6 +36,7 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/moby/locker v1.0.1 // indirect
