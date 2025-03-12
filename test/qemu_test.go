@@ -1,4 +1,4 @@
-package tests
+package integration_test
 
 import (
 	"fmt"
@@ -13,8 +13,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func TestBootInQemu(t *testing.T) {
-	// qemu_run_test.go is your test file from above. We have to compile it as a binary and copy to a QEMU vm
+func TestIntegrationInQemu(t *testing.T) {
 	cmd := exec.Command("go", "test", "-c", "../internal/containerd/containerd_test.go", "-o", "qemu_run_test")
 	if testing.Verbose() {
 		log.Print("compile in-qemu test binary")
@@ -27,16 +26,21 @@ func TestBootInQemu(t *testing.T) {
 	}
 	defer os.Remove("qemu_run_test")
 
-	// These integration tests use QEMU with a statically-compiled kernel (to avoid inintramfs) and specially
-	// prepared rootfs. See TESTING.md.md file for instructions how to prepare
+	disk := vmtest.QemuDisk{
+		Path:   "../testdata/rootfs.cow",
+		Format: "qcow2",
+	}
+
 	opts := vmtest.QemuOptions{
 		OperatingSystem: vmtest.OS_LINUX,
 		Kernel:          "../testdata/bzImage",
 		Params:          []string{"-net", "user,hostfwd=tcp::10022-:22", "-net", "nic", "-enable-kvm", "-cpu", "host", "-m", "2048M"},
-		Disks:           []vmtest.QemuDisk{vmtest.QemuDisk{Path: "../testdata/rootfs.cow", Format: "qcow2"}},
-		Append:          []string{"root=/dev/sda", "rw"},
-		Verbose:         testing.Verbose(),
-		Timeout:         50 * time.Second,
+		Disks: []vmtest.QemuDisk{
+			disk,
+		},
+		Append:  []string{"root=/dev/sda", "rw"},
+		Verbose: testing.Verbose(),
+		Timeout: 50 * time.Second,
 	}
 	// Run QEMU instance
 	qemu, err := vmtest.NewQemu(&opts)
@@ -48,7 +52,7 @@ func TestBootInQemu(t *testing.T) {
 
 	config := &ssh.ClientConfig{
 		User:            "root",
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //nolint:gosec
 	}
 
 	conn, err := ssh.Dial("tcp", "localhost:10022", config)
@@ -80,7 +84,7 @@ func TestBootInQemu(t *testing.T) {
 
 	output, err := sess.CombinedOutput(testCmd)
 	if testing.Verbose() {
-		fmt.Print(string(output))
+		fmt.Print(string(output)) //nolint:forbidigo
 	}
 	if err != nil {
 		t.Fatal(err)
