@@ -13,18 +13,21 @@ import (
 	"schedctl/internal/output"
 )
 
-func List() ([]containers.Container, error) {
-	// Create a new context with namespace
-	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
-
-	listedContainers := []containers.Container{}
-
-	// Create a new containerd client
+func NewClient() (*containerd.Client, error) {
+	// TODO make this configurable if needed
 	client, err := containerd.New("/run/containerd/containerd.sock")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
-	defer client.Close()
+
+	return client, nil
+}
+
+func List(client *containerd.Client) ([]containers.Container, error) {
+	// Create a new context with namespace
+	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
+
+	listedContainers := []containers.Container{}
 
 	// List all containers in the specified namespace
 	containerdContainers, err := client.Containers(ctx)
@@ -54,13 +57,7 @@ func List() ([]containers.Container, error) {
 	return listedContainers, nil
 }
 
-func Stop(containerID string) error {
-	client, err := containerd.New("/run/containerd/containerd.sock")
-	if err != nil {
-		return fmt.Errorf("failed to create client: %w", err)
-	}
-	defer client.Close()
-
+func Stop(client *containerd.Client, containerID string) error {
 	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
 
 	container, err := client.LoadContainer(ctx, containerID)
@@ -95,16 +92,9 @@ func Stop(containerID string) error {
 	return nil
 }
 
-func Run(image, id string, attach bool) error {
+func Run(client *containerd.Client, image, id string, attach bool, privileged bool) error {
 	// Create a new context with namespace
 	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
-
-	// Create a new containerd client
-	client, err := containerd.New("/run/containerd/containerd.sock")
-	if err != nil {
-		return fmt.Errorf("failed to create client: %w", err)
-	}
-	defer func() { _ = client.Close() }()
 
 	// Pull the image
 	img, err := client.Pull(ctx, image, containerd.WithPullUnpack)
@@ -112,12 +102,20 @@ func Run(image, id string, attach bool) error {
 		return fmt.Errorf("failed to pull image: %w", err)
 	}
 
+	var specOption containerd.NewContainerOpts
+	if privileged {
+		specOption = containerd.WithNewSpec(oci.WithImageConfig(img), oci.WithPrivileged)
+
+	} else {
+		specOption = containerd.WithNewSpec(oci.WithImageConfig(img))
+	}
+
 	// Create a new container
 	container, err := client.NewContainer(
 		ctx,
 		id,
 		containerd.WithNewSnapshot(fmt.Sprintf("%s-snapshot\n", id), img),
-		containerd.WithNewSpec(oci.WithImageConfig(img), oci.WithPrivileged),
+		specOption,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create container: %w", err)
