@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"schedctl/internal/constants"
 	"schedctl/internal/containerd"
 	"schedctl/internal/output"
 	"schedctl/internal/podman"
@@ -35,7 +36,7 @@ func run(cmd *cobra.Command, _ []string, attach bool) error {
 		return err
 	}
 
-	if driver == "containerd" {
+	if driver == constants.CONTAINERD {
 		// connect to rootful containerd
 		client, err := containerd.NewClient()
 		if err != nil {
@@ -49,13 +50,13 @@ func run(cmd *cobra.Command, _ []string, attach bool) error {
 		}
 	}
 
-	if driver == "podman" {
+	if driver == constants.PODMAN {
 		err := podman.Run(image)
 		if err != nil {
 			panic(err)
 		}
 
-		output.Out("Container %s started successfully\n", image)
+		_, _ = output.Out("Container %s started successfully\n", image)
 	}
 
 	return nil
