@@ -22,24 +22,42 @@ func Run(image string) error {
 
 	_, err = images.Pull(client, image, nil)
 	if err != nil {
-		fmt.Println(err)
-		return err
+		return fmt.Errorf("failed to pull image: %w", err)
 	}
-	s := specgen.NewSpecGenerator(image, false)
-	s.Name = beforeColon(image)
-	s.CgroupNS.Value = "schedkit"
-	s.Privileged = &privileged
 
-	createResponse, err := containers.CreateWithSpec(client, s, nil)
+	spec := specgen.NewSpecGenerator(image, false)
+	spec.Name = beforeColon(image)
+	spec.CgroupNS.Value = "schedkit"
+	spec.Privileged = &privileged
+
+	createResponse, err := containers.CreateWithSpec(client, spec, nil)
 	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if err := containers.Start(client, createResponse.ID, nil); err != nil {
-		fmt.Println(err)
-		return err
+		return fmt.Errorf("failed to create container spec: %w", err)
 	}
 
+	if err := containers.Start(client, createResponse.ID, nil); err != nil {
+		return fmt.Errorf("failed to start container: %w", err)
+	}
+
+	return nil
+}
+
+func Stop(container string) error {
+	// Create a new context
+	ctx := context.Background()
+
+	// Create a new Podman connection
+	conn, err := bindings.NewConnection(ctx, "unix:/run/podman/podman.sock")
+	if err != nil {
+		return fmt.Errorf("failed to create Podman connection: %w", err)
+	}
+
+	err = containers.Stop(conn, container, nil)
+	if err != nil {
+		return fmt.Errorf("failed to stop container %s: %w", container, err)
+	}
+
+	fmt.Printf("Container %s stopped successfully\n", container)
 	return nil
 }
 

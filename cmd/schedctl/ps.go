@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"schedctl/internal/constants"
 	"schedctl/internal/containerd"
 	"schedctl/internal/containers"
 	"schedctl/internal/output"
@@ -30,17 +31,15 @@ func ps(cmd *cobra.Command, _ []string) error {
 
 	containersList := make([]containers.Container, 0)
 
-	if driver == "containerd" {
+	if driver == constants.CONTAINERD {
 		containerdList, err := containerd.List(client)
 		if err != nil {
 			panic(err)
 		}
-		for _, container := range containerdList {
-			containersList = append(containersList, container)
-		}
+		containersList = append(containersList, containerdList...)
 	}
 
-	if driver == "podman" {
+	if driver == constants.PODMAN {
 	}
 
 	for _, container := range containersList {
