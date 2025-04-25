@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"schedctl/internal/containerd"
+	"schedctl/internal/output"
+	"schedctl/internal/podman"
 	"schedctl/internal/schedulers"
 
 	"github.com/spf13/cobra"
@@ -45,6 +47,15 @@ func run(cmd *cobra.Command, _ []string, attach bool) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if driver == "podman" {
+		err := podman.Run(image)
+		if err != nil {
+			panic(err)
+		}
+
+		output.Out("Container %s started successfully\n", image)
 	}
 
 	return nil
