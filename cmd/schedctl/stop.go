@@ -15,21 +15,29 @@ func NewStopCmd() *cobra.Command {
 		RunE:  stop,
 	}
 
+	stopCmd.PersistentFlags().StringP("driver", "d", "containerd", "The driver to use: containerd, podman")
+
 	return stopCmd
 }
 
 func stop(cmd *cobra.Command, _ []string) error {
 	id := cmd.Flags().Args()[0]
+	driver := cmd.Flags().Lookup("driver").Value.String()
 
-	client, err := containerd.NewClient()
-	if err != nil {
-		panic(err)
+	if driver == "containerd" {
+		client, err := containerd.NewClient()
+		if err != nil {
+			panic(err)
+		}
+		defer client.Close()
+
+		err = containerd.Stop(client, id)
+		if err != nil {
+			return fmt.Errorf("failed to stop the container: %w", err)
+		}
 	}
-	defer client.Close()
 
-	err = containerd.Stop(client, id)
-	if err != nil {
-		return fmt.Errorf("failed to stop the container: %w", err)
+	if driver == "podman" {
 	}
 
 	return nil
