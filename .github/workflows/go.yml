@@ -35,6 +35,11 @@ jobs:
       with:
         go-version: '1.23'
 
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install libbtrfs-dev libgpgme-dev 
+
     - name: Install QEMU/KVM
       run: |
         sudo apt-get update
