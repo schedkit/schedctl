@@ -1,6 +1,6 @@
 package main
 
-import "schedctl/cmd/schedctl"
+import cmd "schedctl/cmd/schedctl"
 
 func main() {
 	cmd.Execute()
