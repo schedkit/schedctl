@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"schedctl/internal/containerd"
+	"schedctl/internal/podman"
 )
 
 func NewStopCmd() *cobra.Command {
@@ -38,6 +39,10 @@ func stop(cmd *cobra.Command, _ []string) error {
 	}
 
 	if driver == "podman" {
+		err := podman.Stop(id)
+		if err != nil {
+			return fmt.Errorf("failed to stop the container: %w", err)
+		}
 	}
 
 	return nil

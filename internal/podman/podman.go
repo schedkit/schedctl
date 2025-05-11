@@ -3,15 +3,16 @@ package podman
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/containers/podman/v5/pkg/bindings"
-	"github.com/containers/podman/v5/pkg/bindings/containers"
+	podman_containers "github.com/containers/podman/v5/pkg/bindings/containers"
 	"github.com/containers/podman/v5/pkg/bindings/images"
 	"github.com/containers/podman/v5/pkg/specgen"
+
+	"schedctl/internal/containers"
 )
 
-func Run(image string) error {
+func Run(image, id string) error {
 	ctx := context.Background()
 	privileged := true
 
@@ -26,16 +27,16 @@ func Run(image string) error {
 	}
 
 	spec := specgen.NewSpecGenerator(image, false)
-	spec.Name = beforeColon(image)
-	spec.CgroupNS.Value = "schedkit"
+	spec.Name = id
 	spec.Privileged = &privileged
+	spec.Labels = map[string]string{"provider": "schedkit"}
 
-	createResponse, err := containers.CreateWithSpec(client, spec, nil)
+	createResponse, err := podman_containers.CreateWithSpec(client, spec, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create container spec: %w", err)
 	}
 
-	if err := containers.Start(client, createResponse.ID, nil); err != nil {
+	if err := podman_containers.Start(client, createResponse.ID, nil); err != nil {
 		return fmt.Errorf("failed to start container: %w", err)
 	}
 
@@ -43,7 +44,6 @@ func Run(image string) error {
 }
 
 func Stop(container string) error {
-	// Create a new context
 	ctx := context.Background()
 
 	// Create a new Podman connection
@@ -52,16 +52,54 @@ func Stop(container string) error {
 		return fmt.Errorf("failed to create Podman connection: %w", err)
 	}
 
-	err = containers.Stop(conn, container, nil)
+	err = podman_containers.Stop(conn, container, nil)
 	if err != nil {
 		return fmt.Errorf("failed to stop container %s: %w", container, err)
 	}
 
-	fmt.Printf("Container %s stopped successfully\n", container)
+	_, err = podman_containers.Remove(conn, container, nil)
+	if err != nil {
+		return fmt.Errorf("failed to remove container %s: %w", container, err)
+	}
+
 	return nil
 }
 
-func beforeColon(input string) string {
-	parts := strings.SplitN(input, ":", 2)
-	return parts[0]
+func List() ([]containers.Container, error) {
+	ctx := context.Background()
+	enabled := true
+
+	listedContainers := []containers.Container{}
+
+	// Create a new Podman connection
+	conn, err := bindings.NewConnection(ctx, "unix:/run/podman/podman.sock")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Podman connection: %w", err)
+	}
+
+	options := podman_containers.ListOptions{
+		All:     &enabled, // Only show running containers
+		Filters: map[string][]string{"label": {"provider=schedkit"}},
+	}
+
+	podmanRunningContainers, err := podman_containers.List(conn, &options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list containers: %w", err)
+	}
+
+	for _, container := range podmanRunningContainers {
+		ID := container.ID
+		PID := container.Pid
+		Name := container.Names[0]
+
+		listedContainer := containers.Container{
+			ID:   ID,
+			PID:  PID,
+			Name: Name,
+		}
+
+		listedContainers = append(listedContainers, listedContainer)
+	}
+
+	return listedContainers, nil
 }

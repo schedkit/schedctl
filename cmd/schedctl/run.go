@@ -51,7 +51,7 @@ func run(cmd *cobra.Command, _ []string, attach bool) error {
 	}
 
 	if driver == constants.PODMAN {
-		err := podman.Run(image)
+		err := podman.Run(image, schedulerID)
 		if err != nil {
 			panic(err)
 		}

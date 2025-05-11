@@ -44,7 +44,7 @@ func List(client *containerd.Client) ([]containers.Container, error) {
 			return nil, fmt.Errorf("failed to get container task: %w", err)
 		}
 
-		pid := task.Pid()
+		pid := int(task.Pid())
 
 		listedContainer := containers.Container{
 			PID: pid,
