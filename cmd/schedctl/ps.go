@@ -7,6 +7,7 @@ import (
 	"schedctl/internal/containerd"
 	"schedctl/internal/containers"
 	"schedctl/internal/output"
+	"schedctl/internal/podman"
 )
 
 func NewPsCmd() *cobra.Command {
@@ -23,15 +24,16 @@ func NewPsCmd() *cobra.Command {
 
 func ps(cmd *cobra.Command, _ []string) error {
 	driver := cmd.Flags().Lookup("driver").Value.String()
-	client, err := containerd.NewClient()
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
 
 	containersList := make([]containers.Container, 0)
 
 	if driver == constants.CONTAINERD {
+		client, err := containerd.NewClient()
+		if err != nil {
+			panic(err)
+		}
+		defer client.Close()
+
 		containerdList, err := containerd.List(client)
 		if err != nil {
 			panic(err)
@@ -40,6 +42,11 @@ func ps(cmd *cobra.Command, _ []string) error {
 	}
 
 	if driver == constants.PODMAN {
+		podmanList, err := podman.List()
+		if err != nil {
+			panic(err)
+		}
+		containersList = append(containersList, podmanList...)
 	}
 
 	for _, container := range containersList {
