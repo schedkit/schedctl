@@ -1,12 +1,12 @@
 package containerd_test
 
 import (
-	"schedctl/internal/containerd"
-
 	"os/user"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"schedctl/internal/containerd"
 )
 
 func TestContainerdSpawnStopProcess(t *testing.T) {
