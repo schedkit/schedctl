@@ -14,7 +14,19 @@ import (
 )
 
 func TestIntegrationInQemu(t *testing.T) {
-	cmd := exec.Command("go", "test", "-c", "../internal/containerd/containerd_test.go", "-o", "qemu_run_test")
+	err := runInQemu("../internal/containerd/containerd_test.go")
+	if err != nil {
+		t.Fatalf("Error running containerd tests in QEMU: %s", err)
+	}
+
+	err = runInQemu("../internal/podman/podman_test.go")
+	if err != nil {
+		t.Fatalf("Error running Podman tests in QEMU: %s", err)
+	}
+}
+
+func runInQemu(testPath string) error {
+	cmd := exec.Command("go", "test", "-c", testPath, "-o", "qemu_run_test")
 	if testing.Verbose() {
 		log.Print("compile in-qemu test binary")
 		cmd.Stdout = os.Stdout
@@ -22,7 +34,7 @@ func TestIntegrationInQemu(t *testing.T) {
 	}
 	err := cmd.Run()
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
 	defer os.Remove("qemu_run_test")
 
@@ -45,7 +57,7 @@ func TestIntegrationInQemu(t *testing.T) {
 	// Run QEMU instance
 	qemu, err := vmtest.NewQemu(&opts)
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
 	// Shutdown QEMU at the end of the test case
 	defer qemu.Shutdown()
@@ -57,24 +69,24 @@ func TestIntegrationInQemu(t *testing.T) {
 
 	conn, err := ssh.Dial("tcp", "localhost:10022", config)
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
 	defer conn.Close()
 
 	sess, err := conn.NewSession()
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
 	defer sess.Close()
 
 	scpSess, err := conn.NewSession()
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
 
 	err = scp.CopyPath("qemu_run_test", "qemu_run_test", scpSess)
 	if err != nil {
-		t.Error(err)
+		return err
 	}
 
 	testCmd := "./qemu_run_test"
@@ -87,6 +99,8 @@ func TestIntegrationInQemu(t *testing.T) {
 		fmt.Print(string(output)) //nolint:forbidigo
 	}
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
+
+	return nil
 }

@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"schedctl/internal/constants"
 	"schedctl/internal/containerd"
+	"schedctl/internal/output"
+	"schedctl/internal/podman"
 	"schedctl/internal/schedulers"
 
 	"github.com/spf13/cobra"
@@ -19,28 +22,41 @@ func NewRunCmd() *cobra.Command {
 	}
 
 	startCmd.Flags().BoolVarP(&Attach, "attach", "a", false, "attach to the current process instead of detaching")
+	startCmd.PersistentFlags().StringP("driver", "d", "containerd", "The driver to use: containerd, podman")
 
 	return startCmd
 }
 
 func run(cmd *cobra.Command, _ []string, attach bool) error {
+	driver := cmd.Flags().Lookup("driver").Value.String()
 	schedulerID := cmd.Flags().Args()[0]
-
-	// connect to rootful containerd
-	client, err := containerd.NewClient()
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
 
 	image, err := schedulers.GetScheduler(schedulerID)
 	if err != nil {
 		return err
 	}
 
-	err = containerd.Run(client, image, schedulerID, attach, true)
-	if err != nil {
-		return err
+	if driver == constants.CONTAINERD {
+		// connect to rootful containerd
+		client, err := containerd.NewClient()
+		if err != nil {
+			panic(err)
+		}
+		defer client.Close()
+
+		err = containerd.Run(client, image, schedulerID, attach, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	if driver == constants.PODMAN {
+		err := podman.Run(image, schedulerID)
+		if err != nil {
+			panic(err)
+		}
+
+		_, _ = output.Out("Container %s started successfully\n", image)
 	}
 
 	return nil
