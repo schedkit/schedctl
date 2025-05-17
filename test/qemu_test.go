@@ -16,12 +16,12 @@ import (
 func TestIntegrationInQemu(t *testing.T) {
 	err := runInQemu("../internal/containerd/containerd_test.go")
 	if err != nil {
-		t.Fatalf("Error running containerd tests in QEMU", err)
+		t.Fatalf("Error running containerd tests in QEMU: %s", err)
 	}
 
 	err = runInQemu("../internal/podman/podman_test.go")
 	if err != nil {
-		t.Fatalf("Error running Podman tests in QEMU")
+		t.Fatalf("Error running Podman tests in QEMU: %s", err)
 	}
 }
 
