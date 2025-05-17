@@ -18,6 +18,12 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: stable
+    
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install libbtrfs-dev libgpgme-dev 
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
