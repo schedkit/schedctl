@@ -17,7 +17,7 @@ func NewPsCmd() *cobra.Command {
 		RunE:  ps,
 	}
 
-	psCmd.PersistentFlags().StringP("driver", "d", "containerd", "The driver to use: containerd, podman")
+	psCmd.PersistentFlags().StringP("driver", "d", "podman", "The driver to use: containerd, podman")
 
 	return psCmd
 }
