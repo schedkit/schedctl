@@ -22,7 +22,7 @@ func NewRunCmd() *cobra.Command {
 	}
 
 	startCmd.Flags().BoolVarP(&Attach, "attach", "a", false, "attach to the current process instead of detaching")
-	startCmd.PersistentFlags().StringP("driver", "d", "containerd", "The driver to use: containerd, podman")
+	startCmd.PersistentFlags().StringP("driver", "d", "podman", "The driver to use: containerd, podman")
 
 	return startCmd
 }
