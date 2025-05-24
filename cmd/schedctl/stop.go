@@ -16,7 +16,7 @@ func NewStopCmd() *cobra.Command {
 		RunE:  stop,
 	}
 
-	stopCmd.PersistentFlags().StringP("driver", "d", "containerd", "The driver to use: containerd, podman")
+	stopCmd.PersistentFlags().StringP("driver", "d", "podman", "The driver to use: containerd, podman")
 
 	return stopCmd
 }
