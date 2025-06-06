@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	github.com/anatol/vmtest v0.0.0-20230711210602-87511df0d4bc
 	github.com/containerd/containerd v1.7.27
-	github.com/containers/podman/v5 v5.5.0
+	github.com/containers/podman/v5 v5.5.1
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
@@ -80,8 +80,8 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.16.3 // indirect
-	github.com/containers/buildah v1.40.0 // indirect
-	github.com/containers/common v0.63.0 // indirect
+	github.com/containers/buildah v1.40.1 // indirect
+	github.com/containers/common v0.63.1 // indirect
 	github.com/containers/image/v5 v5.35.0 // indirect
 	github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 // indirect
 	github.com/containers/ocicrypt v1.2.1 // indirect
