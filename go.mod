@@ -7,7 +7,7 @@ require (
 	github.com/containerd/containerd v1.7.28
 	github.com/containers/podman/v5 v5.6.0
 	github.com/spf13/cobra v1.9.1
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
 	golang.org/x/crypto v0.41.0
 )
