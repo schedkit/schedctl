@@ -38,7 +38,7 @@ sudo systemctl start containerd
 
 ## Usage
 
-Starting and stopping a scheduler using schedctl is trivial. Just identify the scheduler you want to run using `schedctl list` and then operate it using `schedctl start` and `schedctl stop`.
+Starting and stopping a scheduler using schedctl is trivial. Just identify the scheduler you want to run using `schedctl list` and then operate it using `schedctl run` and `schedctl stop`.
 
 Simple as that. The tool will take care of downloading the scheduler and start the binary inside it.
 
