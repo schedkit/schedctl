@@ -30,6 +30,8 @@ func Run(image, id string) error {
 	spec.Name = id
 	spec.Privileged = &privileged
 	spec.Labels = map[string]string{"provider": "schedkit"}
+	// Share PID namespace with the host (equivalent to --pid=host)
+	spec.PidNS = specgen.Namespace{NSMode: specgen.NamespaceMode("host")}
 
 	createResponse, err := podman_containers.CreateWithSpec(client, spec, nil)
 	if err != nil {
