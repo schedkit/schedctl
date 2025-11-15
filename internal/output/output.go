@@ -5,3 +5,7 @@ import "fmt"
 func Out(output string, vars ...interface{}) (int, error) {
 	return fmt.Printf(output, vars...) //nolint:forbidigo
 }
+
+func Error(output string, vars ...interface{}) {
+	_ = fmt.Errorf(output, vars...)
+}
