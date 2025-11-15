@@ -1,22 +1,53 @@
 package schedulers
 
-import "errors"
+import (
+	"encoding/json"
+	"errors"
+	"io"
+	"net/http"
 
-func List() map[string]string {
-	return map[string]string{
-		"scx_rusty":    "ghcr.io/schedkit/scx_rusty:latest",
-		"scx_rustland": "ghcr.io/schedkit/scx_rustland:latest",
-		"scx_bpfland":  "ghcr.io/schedkit/scx_bpfland:latest",
-		"gthulhu":      "ghcr.io/schedkit/gthulhu:latest",
+	"schedctl/internal/output"
+)
+
+const remoteURL = "https://raw.githubusercontent.com/schedkit/plumbing/refs/heads/main/manifest.json"
+
+type ManifestEntry struct {
+	ImageURI string `json:"imageURI"`
+}
+
+type Manifest map[string]ManifestEntry
+
+func List() Manifest {
+	var manifest Manifest
+
+	resp, err := http.Get(remoteURL)
+	if err != nil {
+		output.Error("Failed to fetch remote file: %v", err)
+		return manifest
 	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		output.Error("Failed to read response body: %v", err)
+		return manifest
+	}
+
+	if err := json.Unmarshal(body, &manifest); err != nil {
+		output.Error("Failed to unmarshal JSON: %v", err)
+		return manifest
+	}
+
+	return manifest
 }
 
 func GetScheduler(id string) (string, error) {
 	var image string
 
-	for key, value := range List() {
+	for key, entry := range List() {
 		if key == id {
-			image = value
+			// For the moment we just append the :latest tag to the image
+			image = entry.ImageURI + ":latest"
 		}
 	}
 
