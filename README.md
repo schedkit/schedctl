@@ -43,3 +43,39 @@ Starting and stopping a scheduler using schedctl is trivial. Just identify the s
 Simple as that. The tool will take care of downloading the scheduler and start the binary inside it.
 
 **Since containerized schedulers require extended capabilities, it's very likely that you'll need to run `schedctl` as root.**
+
+## Development
+
+`schedctl` is just a regular Go project, so just install `make`, `go` and you should be pretty much convered.
+
+However, we have a couple things in the development workflow that are worth exploring.
+
+### QEMU rootfs
+
+We decided to run a significant portion of our integration tests in a QEMU virtual machine orchestrated by a testing library.
+
+This means that we ship a pre-built QEMU rootfs to avoid rebuilding the root filesystem every time tests run, and this rootfs may occasionally need a refresh. In order to do so since the rootfs is based on an Arch Linux filesystem we have an Arch Linux distrobox ready to use.
+
+To refresh the disk image:
+
+```sh
+$ distrobox assemble create --file testdata/distrobox.ini
+$ distrobox enter arch-bootstrap
+$ cd testdata
+$ ./prepare_disk_image.sh
+```
+
+Since the rootfs versioning is managed through `git-lfs` you might want to run a `git rm rootfs.raw` before doing all of this.
+
+### QEMU kernel image
+
+We also ship a pre-built kernel for tests. The configuration is in [testdata/config](testdata/config).
+
+To refresh the kernel image and build a new one, follow these steps:
+
+```sh
+$ distrobox assemble create --file testdata/distrobox.ini
+$ distrobox enter arch-bootstrap
+$ cd testdata
+$ ./prepare_kernel_image.sh
+```
