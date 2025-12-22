@@ -5,7 +5,7 @@ mkfs.ext4 rootfs.raw
 sudo losetup -fP rootfs.raw
 mkdir rootfs
 sudo mount /dev/loop0 rootfs
-sudo pacstrap -c rootfs base openssh containerd nerdctl podman cni-plugins podman
+sudo pacstrap -c rootfs base openssh containerd nerdctl podman cni-plugins podman gpgme
 
 echo "[Match]
 Name=enp0s3
