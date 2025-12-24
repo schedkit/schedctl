@@ -31,9 +31,16 @@ func run(cmd *cobra.Command, _ []string, attach bool) error {
 	driver := cmd.Flags().Lookup("driver").Value.String()
 	schedulerID := cmd.Flags().Args()[0]
 
-	image, err := schedulers.GetScheduler(schedulerID)
+	result, err := schedulers.GetScheduler(schedulerID)
 	if err != nil {
 		return err
+	}
+
+	switch result.Source {
+	case schedulers.SourceManifest:
+		_, _ = output.Out("Running scheduler '%s' from manifest: %s\n", schedulerID, result.ImageURI)
+	case schedulers.SourceDirect:
+		_, _ = output.Out("Running container image: %s\n", result.ImageURI)
 	}
 
 	if driver == constants.CONTAINERD {
@@ -44,19 +51,19 @@ func run(cmd *cobra.Command, _ []string, attach bool) error {
 		}
 		defer client.Close()
 
-		err = containerd.Run(client, image, schedulerID, attach, true)
+		err = containerd.Run(client, result.ImageURI, schedulerID, attach, true)
 		if err != nil {
 			return err
 		}
 	}
 
 	if driver == constants.PODMAN {
-		err := podman.Run(image, schedulerID)
+		err := podman.Run(result.ImageURI, schedulerID)
 		if err != nil {
 			panic(err)
 		}
 
-		_, _ = output.Out("Container %s started successfully\n", image)
+		_, _ = output.Out("Container %s started successfully\n", result.ImageURI)
 	}
 
 	return nil

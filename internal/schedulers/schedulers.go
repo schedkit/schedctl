@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strings"
 
 	"schedctl/internal/output"
 )
@@ -16,6 +17,18 @@ type ManifestEntry struct {
 }
 
 type Manifest map[string]ManifestEntry
+
+type ImageSource string
+
+const (
+	SourceManifest ImageSource = "manifest"
+	SourceDirect   ImageSource = "direct"
+)
+
+type SchedulerImage struct {
+	ImageURI string
+	Source   ImageSource
+}
 
 func List() Manifest {
 	var manifest Manifest
@@ -41,19 +54,65 @@ func List() Manifest {
 	return manifest
 }
 
-func GetScheduler(id string) (string, error) {
-	var image string
+// isContainerImage checks if a string looks like a container image URI.
+// Examples:
+//   - ghcr.io/user/repo
+//   - docker.io/nginx:latest
+//   - quay.io/org/image:v1.0
+//   - localhost:5000/myimage
+//   - nginx/alpine
+func isContainerImage(input string) bool {
+	if strings.Contains(input, "/") {
+		parts := strings.Split(input, "/")
+		firstPart := parts[0]
 
-	for key, entry := range List() {
-		if key == id {
-			// For the moment we just append the :latest tag to the image
-			image = entry.ImageURI + ":latest"
+		if strings.Contains(firstPart, ".") || strings.Contains(firstPart, ":") {
+			return true
+		}
+
+		if len(parts) >= 2 {
+			return true
 		}
 	}
 
-	if len(image) == 0 {
-		return "", errors.New("scheduler not found")
+	return false
+}
+
+func ensureImageTag(image string) string {
+	if strings.Contains(image, "@") {
+		return image
 	}
 
-	return image, nil
+	parts := strings.Split(image, "/")
+	lastPart := parts[len(parts)-1]
+
+	// Check if the last part (repo name) has a tag
+	if !strings.Contains(lastPart, ":") {
+		return image + ":latest"
+	}
+
+	return image
+}
+
+func GetScheduler(id string) (SchedulerImage, error) {
+	var result SchedulerImage
+
+	manifest := List()
+	for key, entry := range manifest {
+		if key == id {
+			result.ImageURI = ensureImageTag(entry.ImageURI)
+			result.Source = SourceManifest
+			return result, nil
+		}
+	}
+
+	if isContainerImage(id) {
+		result.ImageURI = ensureImageTag(id)
+		result.Source = SourceDirect
+		return result, nil
+	}
+
+	return result, errors.New(
+		"scheduler not found in manifest and input does not appear to be a valid container image URI",
+	)
 }
