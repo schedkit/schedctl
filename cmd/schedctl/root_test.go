@@ -24,7 +24,7 @@ func TestRootCmdHasSubcommands(t *testing.T) {
 	actualCommands := make([]string, 0)
 
 	for _, command := range rootCmd.Commands() {
-		actualCommands = append(actualCommands, command.Use)
+		actualCommands = append(actualCommands, command.Name())
 	}
 
 	for _, expected := range expectedCommands {

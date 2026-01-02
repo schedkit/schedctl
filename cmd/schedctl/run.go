@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"schedctl/internal/constants"
 	"schedctl/internal/containerd"
 	"schedctl/internal/output"
@@ -14,8 +15,29 @@ func NewRunCmd() *cobra.Command {
 	var Attach bool
 
 	startCmd := &cobra.Command{
-		Use:   "run",
+		Use:   "run SCHEDULER [-- ARGS...]",
 		Short: "Run a specific scheduler",
+		Long: `Run a specific scheduler with optional arguments.
+
+Arguments after -- are passed to the scheduler container.
+
+Examples:
+  schedctl run scx_rusty
+  schedctl run scx_rusty -- --verbose
+  schedctl run --attach scx_rusty -- --mode=performance --interval=100`,
+		Args: func(cmd *cobra.Command, args []string) error {
+			dashIndex := cmd.ArgsLenAtDash()
+			if dashIndex == -1 {
+				if len(args) != 1 {
+					return fmt.Errorf("exactly one scheduler ID required")
+				}
+			} else {
+				if dashIndex != 1 {
+					return fmt.Errorf("exactly one scheduler ID required before --")
+				}
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, arguments []string) error {
 			return run(cmd, arguments, Attach)
 		},
@@ -27,9 +49,14 @@ func NewRunCmd() *cobra.Command {
 	return startCmd
 }
 
-func run(cmd *cobra.Command, _ []string, attach bool) error {
+func run(cmd *cobra.Command, args []string, attach bool) error {
 	driver := cmd.Flags().Lookup("driver").Value.String()
-	schedulerID := cmd.Flags().Args()[0]
+	schedulerID := args[0]
+
+	var containerArgs []string
+	if cmd.ArgsLenAtDash() >= 0 {
+		containerArgs = args[cmd.ArgsLenAtDash():]
+	}
 
 	result, err := schedulers.GetScheduler(schedulerID)
 	if err != nil {
@@ -43,6 +70,10 @@ func run(cmd *cobra.Command, _ []string, attach bool) error {
 		_, _ = output.Out("Running container image: %s\n", result.ImageURI)
 	}
 
+	if len(containerArgs) > 0 {
+		_, _ = output.Out("With arguments: %v\n", containerArgs)
+	}
+
 	if driver == constants.CONTAINERD {
 		// connect to rootful containerd
 		client, err := containerd.NewClient()
@@ -51,14 +82,14 @@ func run(cmd *cobra.Command, _ []string, attach bool) error {
 		}
 		defer client.Close()
 
-		err = containerd.Run(client, result.ImageURI, schedulerID, attach, true)
+		err = containerd.Run(client, result.ImageURI, schedulerID, attach, true, containerArgs)
 		if err != nil {
 			return err
 		}
 	}
 
 	if driver == constants.PODMAN {
-		err := podman.Run(result.ImageURI, schedulerID)
+		err := podman.Run(result.ImageURI, schedulerID, containerArgs)
 		if err != nil {
 			panic(err)
 		}
