@@ -2,7 +2,10 @@ package podman
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/containers/podman/v5/pkg/bindings"
 	podman_containers "github.com/containers/podman/v5/pkg/bindings/containers"
@@ -11,6 +14,14 @@ import (
 
 	"schedctl/internal/containers"
 )
+
+func generateRandomSuffix() (string, error) {
+	bytes := make([]byte, 3)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
 
 func Run(image, id string, args []string) error {
 	ctx := context.Background()
@@ -38,7 +49,19 @@ func Run(image, id string, args []string) error {
 
 	createResponse, err := podman_containers.CreateWithSpec(client, spec, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create container spec: %w", err)
+		if strings.Contains(err.Error(), "name is already in use") || strings.Contains(err.Error(), "already exists") {
+			suffix, suffixErr := generateRandomSuffix()
+			if suffixErr != nil {
+				return fmt.Errorf("failed to generate random suffix: %w", suffixErr)
+			}
+			spec.Name = fmt.Sprintf("%s-%s", id, suffix)
+			createResponse, err = podman_containers.CreateWithSpec(client, spec, nil)
+			if err != nil {
+				return fmt.Errorf("failed to create container with random name: %w", err)
+			}
+		} else {
+			return fmt.Errorf("failed to create container spec: %w", err)
+		}
 	}
 
 	if err := podman_containers.Start(client, createResponse.ID, nil); err != nil {
