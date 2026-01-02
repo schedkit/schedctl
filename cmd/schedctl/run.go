@@ -89,12 +89,14 @@ func run(cmd *cobra.Command, args []string, attach bool) error {
 	}
 
 	if driver == constants.PODMAN {
-		err := podman.Run(result.ImageURI, schedulerID, containerArgs)
+		err := podman.Run(result.ImageURI, schedulerID, attach, containerArgs)
 		if err != nil {
 			panic(err)
 		}
 
-		_, _ = output.Out("Container %s started successfully\n", result.ImageURI)
+		if !attach {
+			_, _ = output.Out("Container %s started successfully\n", result.ImageURI)
+		}
 	}
 
 	return nil
