@@ -24,7 +24,7 @@ func TestPodmanSpawnStopProcesses(t *testing.T) {
 
 	assert.Equal(t, 0, len(containers))
 
-	err = podman.Run("ghcr.io/schedkit/scx_rusty:latest", "test-scheduler", []string{})
+	err = podman.Run("ghcr.io/schedkit/scx_rusty:latest", "test-scheduler", false, []string{})
 	assert.Nil(t, err)
 
 	containers, err = podman.List()
