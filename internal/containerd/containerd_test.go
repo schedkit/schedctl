@@ -27,7 +27,7 @@ func TestContainerdSpawnStopProcess(t *testing.T) {
 
 	assert.Equal(t, 0, len(containers))
 
-	err = containerd.Run(client, "ghcr.io/schedkit/scx_rusty:latest", "test-scheduler", false, true)
+	err = containerd.Run(client, "ghcr.io/schedkit/scx_rusty:latest", "test-scheduler", false, true, []string{})
 	assert.Nil(t, err)
 
 	containers, err = containerd.List(client)

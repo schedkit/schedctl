@@ -92,25 +92,28 @@ func Stop(client *containerd.Client, containerID string) error {
 	return nil
 }
 
-func Run(client *containerd.Client, image, id string, attach bool, privileged bool) error {
+func Run(client *containerd.Client, image, id string, attach bool, privileged bool, args []string) error {
 	// Create a new context with namespace
 	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
 
-	// Pull the image
 	img, err := client.Pull(ctx, image, containerd.WithPullUnpack)
 	if err != nil {
 		return fmt.Errorf("failed to pull image: %w", err)
 	}
 
-	var specOption containerd.NewContainerOpts
-	if privileged {
-		specOption = containerd.WithNewSpec(oci.WithImageConfig(img), oci.WithPrivileged)
+	var specOpts []oci.SpecOpts
+	specOpts = append(specOpts, oci.WithImageConfig(img))
 
-	} else {
-		specOption = containerd.WithNewSpec(oci.WithImageConfig(img))
+	if privileged {
+		specOpts = append(specOpts, oci.WithPrivileged)
 	}
 
-	// Create a new container
+	if len(args) > 0 {
+		specOpts = append(specOpts, oci.WithProcessArgs(args...))
+	}
+
+	specOption := containerd.WithNewSpec(specOpts...)
+
 	container, err := client.NewContainer(
 		ctx,
 		id,

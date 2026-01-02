@@ -12,7 +12,7 @@ func TestNewRunCmd(t *testing.T) {
 	runCmd := cmd.NewRunCmd()
 
 	assert.NotNil(t, runCmd)
-	assert.Equal(t, "run", runCmd.Use)
+	assert.Equal(t, "run SCHEDULER [-- ARGS...]", runCmd.Use)
 	assert.Equal(t, "Run a specific scheduler", runCmd.Short)
 }
 
@@ -115,4 +115,86 @@ func TestRunCmdCombinedFlags(t *testing.T) {
 
 	assert.Equal(t, "true", attachFlag.Value.String())
 	assert.Equal(t, "containerd", driverFlag.Value.String())
+}
+
+func TestRunCmdWithContainerArgs(t *testing.T) {
+	runCmd := cmd.NewRunCmd()
+
+	err := runCmd.ParseFlags([]string{"scx_rusty", "--", "--verbose", "--interval=100"})
+	assert.NoError(t, err)
+
+	args := runCmd.Flags().Args()
+	assert.Equal(t, 3, len(args))
+	assert.Equal(t, "scx_rusty", args[0])
+	assert.Equal(t, "--verbose", args[1])
+	assert.Equal(t, "--interval=100", args[2])
+	assert.Equal(t, 1, runCmd.ArgsLenAtDash())
+}
+
+func TestRunCmdWithoutContainerArgs(t *testing.T) {
+	runCmd := cmd.NewRunCmd()
+
+	err := runCmd.ParseFlags([]string{"scx_rusty"})
+	assert.NoError(t, err)
+
+	args := runCmd.Flags().Args()
+	assert.Equal(t, 1, len(args))
+	assert.Equal(t, "scx_rusty", args[0])
+	assert.Equal(t, -1, runCmd.ArgsLenAtDash())
+}
+
+func TestRunCmdArgsSeparatorWithFlags(t *testing.T) {
+	runCmd := cmd.NewRunCmd()
+
+	err := runCmd.ParseFlags([]string{"-a", "-d", "containerd", "scx_rusty", "--", "--mode=perf"})
+	assert.NoError(t, err)
+
+	attachFlag := runCmd.Flags().Lookup("attach")
+	driverFlag := runCmd.Flags().Lookup("driver")
+	args := runCmd.Flags().Args()
+
+	assert.Equal(t, "true", attachFlag.Value.String())
+	assert.Equal(t, "containerd", driverFlag.Value.String())
+	assert.Equal(t, 2, len(args))
+	assert.Equal(t, 1, runCmd.ArgsLenAtDash())
+}
+
+func TestRunCmdValidationNoSchedulerID(t *testing.T) {
+	runCmd := cmd.NewRunCmd()
+
+	err := runCmd.ValidateArgs([]string{})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "exactly one scheduler ID required")
+}
+
+func TestRunCmdValidationMultipleSchedulersBeforeDash(t *testing.T) {
+	runCmd := cmd.NewRunCmd()
+
+	err := runCmd.ParseFlags([]string{"sched1", "sched2", "--", "--verbose"})
+	assert.NoError(t, err)
+
+	err = runCmd.ValidateArgs(runCmd.Flags().Args())
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "exactly one scheduler ID required before --")
+}
+
+func TestRunCmdValidationEmptyContainerArgs(t *testing.T) {
+	runCmd := cmd.NewRunCmd()
+
+	err := runCmd.ParseFlags([]string{"scx_rusty", "--"})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, runCmd.ArgsLenAtDash())
+
+	err = runCmd.ValidateArgs(runCmd.Flags().Args())
+	assert.NoError(t, err)
+}
+
+func TestRunCmdValidationSingleSchedulerWithArgs(t *testing.T) {
+	runCmd := cmd.NewRunCmd()
+
+	err := runCmd.ParseFlags([]string{"scx_rusty", "--", "--verbose", "--interval=100"})
+	assert.NoError(t, err)
+
+	err = runCmd.ValidateArgs(runCmd.Flags().Args())
+	assert.NoError(t, err)
 }
