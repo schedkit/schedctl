@@ -5,12 +5,14 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/cio"
 	"github.com/containerd/containerd/namespaces"
 	"github.com/containerd/containerd/oci"
+	specs "github.com/opencontainers/runtime-spec/specs-go"
 
 	"schedctl/internal/containers"
 	"schedctl/internal/output"
@@ -121,6 +123,21 @@ func Run(client *containerd.Client, image, id string, attach bool, privileged bo
 	if len(args) > 0 {
 		specOpts = append(specOpts, oci.WithProcessArgs(args...))
 	}
+
+	// Ensure /var/run/scx exists on host for scx scheduler stats socket sharing
+	if err := os.MkdirAll("/var/run/scx", 0755); err != nil {
+		return fmt.Errorf("failed to create /var/run/scx: %w", err)
+	}
+
+	// Add bind mount for scx stats socket directory
+	specOpts = append(specOpts, oci.WithMounts([]specs.Mount{
+		{
+			Source:      "/var/run/scx",
+			Destination: "/var/run/scx",
+			Type:        "bind",
+			Options:     []string{"rbind", "rw"},
+		},
+	}))
 
 	specOption := containerd.WithNewSpec(specOpts...)
 
