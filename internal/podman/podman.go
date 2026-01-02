@@ -25,7 +25,7 @@ func generateRandomSuffix() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func Run(image, id string, args []string) error {
+func Run(image, id string, attach bool, args []string) error {
 	ctx := context.Background()
 	privileged := true
 
@@ -83,6 +83,35 @@ func Run(image, id string, args []string) error {
 
 	if err := podman_containers.Start(client, createResponse.ID, nil); err != nil {
 		return fmt.Errorf("failed to start container: %w", err)
+	}
+
+	if attach {
+		errChan := make(chan error, 1)
+		go func() {
+			err := podman_containers.Attach(
+				client,
+				createResponse.ID,
+				os.Stdin,
+				os.Stdout,
+				os.Stderr,
+				nil,
+				new(podman_containers.AttachOptions).WithStream(true),
+			)
+			errChan <- err
+		}()
+
+		exitCode, err := podman_containers.Wait(client, createResponse.ID, nil)
+		if err != nil {
+			return fmt.Errorf("failed to wait for container: %w", err)
+		}
+
+		if attachErr := <-errChan; attachErr != nil {
+			return fmt.Errorf("attach failed: %w", attachErr)
+		}
+
+		if exitCode != 0 {
+			return fmt.Errorf("container exited with status: %d", exitCode)
+		}
 	}
 
 	return nil
