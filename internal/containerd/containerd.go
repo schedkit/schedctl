@@ -2,7 +2,10 @@ package containerd
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/cio"
@@ -12,6 +15,14 @@ import (
 	"schedctl/internal/containers"
 	"schedctl/internal/output"
 )
+
+func generateRandomSuffix() (string, error) {
+	bytes := make([]byte, 3)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
 
 func NewClient() (*containerd.Client, error) {
 	// TODO make this configurable if needed
@@ -93,7 +104,6 @@ func Stop(client *containerd.Client, containerID string) error {
 }
 
 func Run(client *containerd.Client, image, id string, attach bool, privileged bool, args []string) error {
-	// Create a new context with namespace
 	ctx := namespaces.WithNamespace(context.Background(), "schedkit")
 
 	img, err := client.Pull(ctx, image, containerd.WithPullUnpack)
@@ -114,25 +124,44 @@ func Run(client *containerd.Client, image, id string, attach bool, privileged bo
 
 	specOption := containerd.WithNewSpec(specOpts...)
 
+	containerID := id
+	snapshotID := fmt.Sprintf("%s-snapshot\n", id)
+
 	container, err := client.NewContainer(
 		ctx,
-		id,
-		containerd.WithNewSnapshot(fmt.Sprintf("%s-snapshot\n", id), img),
+		containerID,
+		containerd.WithNewSnapshot(snapshotID, img),
 		specOption,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create container: %w", err)
+		if strings.Contains(err.Error(), "already exists") {
+			suffix, suffixErr := generateRandomSuffix()
+			if suffixErr != nil {
+				return fmt.Errorf("failed to generate random suffix: %w", suffixErr)
+			}
+			containerID = fmt.Sprintf("%s-%s", id, suffix)
+			snapshotID = fmt.Sprintf("%s-snapshot\n", containerID)
+			container, err = client.NewContainer(
+				ctx,
+				containerID,
+				containerd.WithNewSnapshot(snapshotID, img),
+				specOption,
+			)
+			if err != nil {
+				return fmt.Errorf("failed to create container with random name: %w", err)
+			}
+		} else {
+			return fmt.Errorf("failed to create container: %w", err)
+		}
 	}
 	defer func() { _ = container.Delete(ctx, containerd.WithSnapshotCleanup) }()
 
-	// Create a task
 	task, err := container.NewTask(ctx, cio.NewCreator(cio.WithStdio))
 	if err != nil {
 		return fmt.Errorf("failed to create task: %w", err)
 	}
 	defer func() { _, _ = task.Delete(ctx) }()
 
-	// Start the task
 	err = task.Start(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to start task: %w", err)
@@ -141,13 +170,11 @@ func Run(client *containerd.Client, image, id string, attach bool, privileged bo
 	_, _ = output.Out("Task started, PID: %d\n", task.Pid())
 
 	if attach {
-		// Wait for the task to exit
 		exitStatusC, err := task.Wait(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to wait for task: %w", err)
 		}
 
-		// Get the exit status
 		status := <-exitStatusC
 		code, _, err := status.Result()
 		if err != nil {
