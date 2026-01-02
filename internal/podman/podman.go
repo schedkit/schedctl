@@ -5,12 +5,14 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/containers/podman/v5/pkg/bindings"
 	podman_containers "github.com/containers/podman/v5/pkg/bindings/containers"
 	"github.com/containers/podman/v5/pkg/bindings/images"
 	"github.com/containers/podman/v5/pkg/specgen"
+	specs "github.com/opencontainers/runtime-spec/specs-go"
 
 	"schedctl/internal/containers"
 )
@@ -42,6 +44,21 @@ func Run(image, id string, args []string) error {
 	spec.Privileged = &privileged
 	spec.Labels = map[string]string{"provider": "schedkit"}
 	spec.PidNS = specgen.Namespace{NSMode: specgen.NamespaceMode("host")}
+
+	// Ensure /var/run/scx exists on host for scx scheduler stats socket sharing
+	if err := os.MkdirAll("/var/run/scx", 0755); err != nil {
+		return fmt.Errorf("failed to create /var/run/scx: %w", err)
+	}
+
+	// Add bind mount for scx stats socket directory
+	spec.Mounts = []specs.Mount{
+		{
+			Source:      "/var/run/scx",
+			Destination: "/var/run/scx",
+			Type:        "bind",
+			Options:     []string{"rbind", "rw"},
+		},
+	}
 
 	if len(args) > 0 {
 		spec.Command = args
