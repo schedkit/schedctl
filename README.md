@@ -52,11 +52,29 @@ However, we have a couple things in the development workflow that are worth expl
 
 ### QEMU rootfs
 
-We decided to run a significant portion of our integration tests in a QEMU virtual machine orchestrated by a testing library.
+We run a significant portion of our integration tests in a QEMU virtual machine orchestrated by a testing library.
 
-This means that we ship a pre-built QEMU rootfs to avoid rebuilding the root filesystem every time tests run, and this rootfs may occasionally need a refresh. In order to do so since the rootfs is based on an Arch Linux filesystem we have an Arch Linux distrobox ready to use.
+The QEMU rootfs is an Arch Linux disk image built with [mkosi](https://github.com/systemd/mkosi). The configuration lives in `testdata/` (`mkosi.conf`, `mkosi.repart/`, `mkosi.extra/`, and `mkosi.postinst.chroot`).
 
-To refresh the disk image:
+In CI, the image is built on-the-fly by mkosi. To build it locally:
+
+```sh
+sudo mkosi --directory testdata --output-dir testdata
+```
+
+This produces `testdata/rootfs.raw`. Note that mkosi creates a GPT-partitioned disk image, so you'll need to extract the root partition for use with the test framework:
+
+```sh
+LOOP=$(sudo losetup --find --show --partscan testdata/rootfs.raw)
+sudo dd if="${LOOP}p1" of=testdata/rootfs_ext4.raw bs=4M
+sudo losetup -d "$LOOP"
+mv testdata/rootfs_ext4.raw testdata/rootfs.raw
+qemu-img create -o backing_file=rootfs.raw,backing_fmt=raw -f qcow2 testdata/rootfs.cow
+```
+
+#### Legacy method
+
+The old `testdata/prepare_disk_image.sh` script can still be used with distrobox to build the image manually:
 
 ```sh
 $ distrobox assemble create --file testdata/distrobox.ini
@@ -64,8 +82,6 @@ $ distrobox enter arch-bootstrap
 $ cd testdata
 $ ./prepare_disk_image.sh
 ```
-
-Since the rootfs versioning is managed through `git-lfs` you might want to run a `git rm rootfs.raw` before doing all of this.
 
 ### QEMU kernel image
 
