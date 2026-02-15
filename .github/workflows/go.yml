@@ -128,13 +128,34 @@ jobs:
           exit 1
         fi
         echo "Image: $IMG ($(stat -c%s "$IMG") bytes)"
+        # Dump partition table for debugging
+        sudo sfdisk --json "$IMG" | jq '.partitiontable.partitions[] | {type, start, size}'
+        # Select the root partition (x86-64 root GUID), not the ESP
         eval "$(sudo sfdisk --json "$IMG" | jq -r '
-          .partitiontable.partitions[0] |
+          .partitiontable.partitions[] |
+          select(.type == "4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709") |
           "PART_START=\(.start) PART_SIZE=\(.size)"')"
-        echo "Partition start=$PART_START size=$PART_SIZE (sectors)"
+        echo "Root partition start=$PART_START size=$PART_SIZE (sectors)"
         sudo dd if="$IMG" of=rootfs_ext4.raw \
           bs=512 skip="$PART_START" count="$PART_SIZE" status=progress
         mv rootfs_ext4.raw rootfs.raw
+
+    - name: Verify rootfs contents
+      working-directory: testdata
+      run: |
+        mkdir -p /tmp/rootfs-check
+        sudo mount -o loop,ro rootfs.raw /tmp/rootfs-check
+        echo "=== Checking for init ==="
+        ls -la /tmp/rootfs-check/sbin/init /tmp/rootfs-check/usr/lib/systemd/systemd 2>&1 || true
+        echo "=== /sbin/ contents ==="
+        ls -la /tmp/rootfs-check/sbin/ 2>&1 | head -20
+        echo "=== /usr/bin/ sample ==="
+        ls /tmp/rootfs-check/usr/bin/ 2>&1 | head -20
+        echo "=== Installed packages ==="
+        ls /tmp/rootfs-check/var/lib/pacman/local/ 2>&1 | head -30
+        echo "=== ext4 features ==="
+        sudo tune2fs -l rootfs.raw 2>&1 | grep features || true
+        sudo umount /tmp/rootfs-check
 
     - name: Create qcow2 overlay
       working-directory: testdata
