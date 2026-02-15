@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+# Remove root password for passwordless SSH access (test environment only)
+passwd -d root
+
+# Configure SSH for root login with empty password
+sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+sed -i 's/#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config
+
+# Enable required services
+systemctl enable sshd systemd-networkd containerd podman.socket
