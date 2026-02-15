@@ -140,22 +140,40 @@ jobs:
           bs=512 skip="$PART_START" count="$PART_SIZE" status=progress
         mv rootfs_ext4.raw rootfs.raw
 
-    - name: Verify rootfs contents
+    - name: Configure rootfs image
       working-directory: testdata
       run: |
-        mkdir -p /tmp/rootfs-check
-        sudo mount -o loop,ro rootfs.raw /tmp/rootfs-check
-        echo "=== Checking for init ==="
-        ls -la /tmp/rootfs-check/sbin/init /tmp/rootfs-check/usr/lib/systemd/systemd 2>&1 || true
-        echo "=== /sbin/ contents ==="
-        ls -la /tmp/rootfs-check/sbin/ 2>&1 | head -20
-        echo "=== /usr/bin/ sample ==="
-        ls /tmp/rootfs-check/usr/bin/ 2>&1 | head -20
-        echo "=== Installed packages ==="
-        ls /tmp/rootfs-check/var/lib/pacman/local/ 2>&1 | head -30
-        echo "=== ext4 features ==="
-        sudo tune2fs -l rootfs.raw 2>&1 | grep features || true
-        sudo umount /tmp/rootfs-check
+        mkdir -p /tmp/rootfs-mnt
+        sudo mount -o loop rootfs.raw /tmp/rootfs-mnt
+        R=/tmp/rootfs-mnt
+
+        # Remove root password
+        sudo sed -i '/^root:/ s|^root:[^:]*:|root::|' $R/etc/shadow
+
+        # Generate SSH host keys
+        sudo ssh-keygen -A -f $R
+
+        # SSH config drop-in (in case mkosi.extra didn't copy it)
+        sudo mkdir -p $R/etc/ssh/sshd_config.d
+        echo -e "PermitRootLogin yes\nPermitEmptyPasswords yes" | sudo tee $R/etc/ssh/sshd_config.d/99-test.conf
+
+        # Enable services
+        sudo ln -sf /usr/lib/systemd/system/sshd.service $R/etc/systemd/system/multi-user.target.wants/sshd.service
+        sudo ln -sf /usr/lib/systemd/system/systemd-networkd.service $R/etc/systemd/system/multi-user.target.wants/systemd-networkd.service
+        sudo ln -sf /usr/lib/systemd/system/containerd.service $R/etc/systemd/system/multi-user.target.wants/containerd.service
+        sudo mkdir -p $R/etc/systemd/system/sockets.target.wants
+        sudo ln -sf /usr/lib/systemd/system/podman.socket $R/etc/systemd/system/sockets.target.wants/podman.socket
+
+        # Verify
+        echo "=== root shadow entry ==="
+        sudo grep '^root:' $R/etc/shadow
+        echo "=== SSH host keys ==="
+        ls -la $R/etc/ssh/ssh_host_*
+        echo "=== Enabled services ==="
+        ls -la $R/etc/systemd/system/multi-user.target.wants/
+        ls -la $R/etc/systemd/system/sockets.target.wants/
+
+        sudo umount /tmp/rootfs-mnt
 
     - name: Create qcow2 overlay
       working-directory: testdata
