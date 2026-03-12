@@ -54,7 +54,7 @@ However, we have a couple things in the development workflow that are worth expl
 
 We run a significant portion of our integration tests in a QEMU virtual machine orchestrated by a testing library.
 
-The QEMU rootfs is an Arch Linux disk image built with [mkosi](https://github.com/systemd/mkosi). The configuration lives in `testdata/` (`mkosi.conf`, `mkosi.repart/`, `mkosi.extra/`, and `mkosi.postinst.chroot`).
+The QEMU rootfs is an openSUSE Tumbleweed disk image built with [mkosi](https://github.com/systemd/mkosi). The configuration lives in `testdata/` (`mkosi.conf`, `mkosi.repart/`, `mkosi.extra/`, and `mkosi.postinst.chroot`).
 
 In CI, the image is built on-the-fly by mkosi. To build it locally:
 
