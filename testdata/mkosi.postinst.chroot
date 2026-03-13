@@ -4,9 +4,27 @@ set -e
 # Remove root password for passwordless SSH access (test environment only)
 passwd -d root
 
-# SSH config is handled via drop-in at /etc/ssh/sshd_config.d/99-test.conf
 # Pre-generate host keys so sshd can complete handshakes on first boot
 ssh-keygen -A
+
+# Configure PAM to allow empty password authentication.
+# Add 'nullok' to pam_unix.so in the sshd PAM config so that accounts
+# with no password set can authenticate via SSH.
+if [ -f /etc/pam.d/sshd ]; then
+    sed -i 's/pam_unix\.so/pam_unix.so nullok/' /etc/pam.d/sshd
+fi
+# Also patch common-auth which sshd may include
+if [ -f /etc/pam.d/common-auth ]; then
+    sed -i 's/pam_unix\.so/pam_unix.so nullok/' /etc/pam.d/common-auth
+fi
+
+# Mask serial console getty — the serial-getty@ttyS0 unit hangs waiting
+# for udev to tag the device, blocking the login prompt indefinitely.
+# The test connects via SSH, so the serial login prompt is not needed.
+systemctl mask serial-getty@ttyS0.service serial-getty@.service
+
+# Mask mkosi's VSock SSH socket (not needed in our QEMU setup)
+systemctl mask ssh.socket
 
 # Enable required services
 systemctl enable sshd systemd-networkd containerd podman.socket

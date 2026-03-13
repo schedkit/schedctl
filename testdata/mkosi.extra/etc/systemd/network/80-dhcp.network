@@ -1,0 +1,7 @@
+[Match]
+Name=e*
+
+[Network]
+Address=10.0.2.15/24
+Gateway=10.0.2.2
+DNS=10.0.2.3
