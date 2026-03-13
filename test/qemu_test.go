@@ -14,19 +14,20 @@ import (
 )
 
 func TestIntegrationInQemu(t *testing.T) {
-	err := runInQemu("../internal/containerd/containerd_test.go")
+	err := runInQemu(t, "../internal/containerd/containerd_test.go")
 	if err != nil {
 		t.Fatalf("Error running containerd tests in QEMU: %s", err)
 	}
 
-	err = runInQemu("../internal/podman/podman_test.go")
+	err = runInQemu(t, "../internal/podman/podman_test.go")
 	if err != nil {
 		t.Fatalf("Error running Podman tests in QEMU: %s", err)
 	}
 }
 
-func runInQemu(testPath string) error {
-	cmd := exec.Command("go", "test", "-c", testPath, "-o", "qemu_run_test")
+func runInQemu(t *testing.T, testPath string) error {
+	cmd := exec.Command("go", "test", "-tags", "containers_image_openpgp", "-c", testPath, "-o", "qemu_run_test")
+	cmd.Env = append(os.Environ(), "CGO_ENABLED=0")
 	if testing.Verbose() {
 		log.Print("compile in-qemu test binary")
 		cmd.Stdout = os.Stdout
@@ -46,13 +47,13 @@ func runInQemu(testPath string) error {
 	opts := vmtest.QemuOptions{
 		OperatingSystem: vmtest.OS_LINUX,
 		Kernel:          "../testdata/bzImage",
-		Params:          []string{"-net", "user,hostfwd=tcp::10022-:22", "-net", "nic", "-enable-kvm", "-cpu", "host", "-m", "2048M"},
+		Params:          []string{"-netdev", "user,id=net0,hostfwd=tcp::10022-:22", "-device", "e1000,netdev=net0", "-enable-kvm", "-cpu", "host", "-m", "2048M"},
 		Disks: []vmtest.QemuDisk{
 			disk,
 		},
-		Append:  []string{"root=/dev/sda", "rw"},
+		Append:  []string{"root=/dev/sda", "rw", "ip=10.0.2.15::10.0.2.2:255.255.255.0::eth0:off"},
 		Verbose: testing.Verbose(),
-		Timeout: 50 * time.Second,
+		Timeout: 120 * time.Second,
 	}
 	// Run QEMU instance
 	qemu, err := vmtest.NewQemu(&opts)
@@ -64,42 +65,58 @@ func runInQemu(testPath string) error {
 
 	config := &ssh.ClientConfig{
 		User:            "root",
+		Auth:            []ssh.AuthMethod{ssh.Password("")},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //nolint:gosec
 	}
 
-	conn, err := ssh.Dial("tcp", "localhost:10022", config)
-	if err != nil {
-		return err
+	// Retry SSH connection until the VM has finished booting
+	var conn *ssh.Client
+	for i := range 20 {
+		conn, err = ssh.Dial("tcp", "127.0.0.1:10022", config)
+		if err == nil {
+			break
+		}
+		if i == 19 {
+			return fmt.Errorf("ssh connection failed after retries: %w", err)
+		}
+		time.Sleep(time.Second)
 	}
 	defer conn.Close()
 
-	sess, err := conn.NewSession()
+	// Run a trivial command to ensure SSH subsystem is fully ready
+	warmup, err := conn.NewSession()
 	if err != nil {
-		return err
+		return fmt.Errorf("creating warmup session: %w", err)
 	}
-	defer sess.Close()
+	if _, err := warmup.CombinedOutput("true"); err != nil {
+		return fmt.Errorf("warmup command failed: %w", err)
+	}
 
 	scpSess, err := conn.NewSession()
 	if err != nil {
-		return err
+		return fmt.Errorf("creating scp session: %w", err)
 	}
 
 	err = scp.CopyPath("qemu_run_test", "qemu_run_test", scpSess)
 	if err != nil {
-		return err
+		return fmt.Errorf("scp failed: %w", err)
 	}
 
-	testCmd := "./qemu_run_test"
+	sess, err := conn.NewSession()
+	if err != nil {
+		return fmt.Errorf("creating test session: %w", err)
+	}
+	defer sess.Close()
+
+	testCmd := "chmod +x qemu_run_test && ./qemu_run_test"
 	if testing.Verbose() {
 		testCmd += " -test.v"
 	}
 
 	output, err := sess.CombinedOutput(testCmd)
-	if testing.Verbose() {
-		fmt.Print(string(output)) //nolint:forbidigo
-	}
+	t.Logf("test output:\n%s", output)
 	if err != nil {
-		return err
+		return fmt.Errorf("test failed: %w", err)
 	}
 
 	return nil

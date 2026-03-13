@@ -22,12 +22,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get -y install libbtrfs-dev libgpgme-dev
+          sudo apt-get -y install libbtrfs-dev
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: v2.1.6
+          args: --build-tags containers_image_openpgp
 
   build:
     name: Build and test
@@ -45,7 +46,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get -y install libbtrfs-dev libgpgme-dev
+        sudo apt-get -y install libbtrfs-dev
 
     - name: Install QEMU/KVM
       run: |
@@ -59,10 +60,10 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
     - name: Build
-      run: go build -v ./...
+      run: go build -tags containers_image_openpgp -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: go test -tags containers_image_openpgp -timeout 20m -v ./...
 
   build-mkosi:
     name: Build and test (mkosi)
@@ -89,7 +90,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get -y install libbtrfs-dev libgpgme-dev qemu-system qemu-kvm qemu-utils
+        sudo apt-get -y install libbtrfs-dev qemu-system qemu-kvm qemu-utils
 
     - name: Enable KVM group perms
       run: |
@@ -153,9 +154,32 @@ jobs:
         # Generate SSH host keys
         sudo ssh-keygen -A -f $R
 
-        # SSH config drop-in (in case mkosi.extra didn't copy it)
+        # Configure sshd for passwordless root access (test environment only).
+        # openSUSE keeps the vendor config at /usr/etc/ssh/sshd_config which
+        # includes /etc/ssh/sshd_config.d/*.conf — write our overrides there.
         sudo mkdir -p $R/etc/ssh/sshd_config.d
-        echo -e "PermitRootLogin yes\nPermitEmptyPasswords yes" | sudo tee $R/etc/ssh/sshd_config.d/99-test.conf
+        printf 'PermitRootLogin yes\nPasswordAuthentication yes\nPermitEmptyPasswords yes\nUsePAM yes\n' \
+          | sudo tee $R/etc/ssh/sshd_config.d/99-test.conf
+
+        # Configure PAM to allow empty password authentication
+        if [ -f $R/etc/pam.d/sshd ]; then
+          sudo sed -i 's/pam_unix\.so/pam_unix.so nullok/' $R/etc/pam.d/sshd
+        fi
+        if [ -f $R/etc/pam.d/common-auth ]; then
+          sudo sed -i 's/pam_unix\.so/pam_unix.so nullok/' $R/etc/pam.d/common-auth
+        fi
+
+        # Configure systemd-networkd to use DHCP on the virtual NIC
+        sudo mkdir -p $R/etc/systemd/network
+        printf '[Match]\nName=e*\n\n[Network]\nAddress=10.0.2.15/24\nGateway=10.0.2.2\nDNS=10.0.2.3\n' \
+          | sudo tee $R/etc/systemd/network/80-dhcp.network
+
+        # Mask serial console getty (hangs waiting for udev to tag /dev/ttyS0)
+        sudo ln -sf /dev/null $R/etc/systemd/system/serial-getty@ttyS0.service
+        sudo ln -sf /dev/null $R/etc/systemd/system/serial-getty@.service
+
+        # Mask mkosi's VSock SSH socket (not needed, causes noisy failure)
+        sudo ln -sf /dev/null $R/etc/systemd/system/ssh.socket
 
         # Enable services
         sudo ln -sf /usr/lib/systemd/system/sshd.service $R/etc/systemd/system/multi-user.target.wants/sshd.service
@@ -164,14 +188,7 @@ jobs:
         sudo mkdir -p $R/etc/systemd/system/sockets.target.wants
         sudo ln -sf /usr/lib/systemd/system/podman.socket $R/etc/systemd/system/sockets.target.wants/podman.socket
 
-        # Verify
-        echo "=== root shadow entry ==="
-        sudo grep '^root:' $R/etc/shadow
-        echo "=== SSH host keys ==="
-        ls -la $R/etc/ssh/ssh_host_*
-        echo "=== Enabled services ==="
-        ls -la $R/etc/systemd/system/multi-user.target.wants/
-        ls -la $R/etc/systemd/system/sockets.target.wants/
+
 
         sudo umount /tmp/rootfs-mnt
 
@@ -180,7 +197,7 @@ jobs:
       run: qemu-img create -o backing_file=rootfs.raw,backing_fmt=raw -f qcow2 rootfs.cow
 
     - name: Build
-      run: go build -v ./...
+      run: go build -tags containers_image_openpgp -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: go test -tags containers_image_openpgp -timeout 20m -v ./...
