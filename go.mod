@@ -1,6 +1,6 @@
 module schedctl
 
-go 1.24.2
+go 1.25.8
 
 require (
 	github.com/anatol/vmtest v0.0.0-20230711210602-87511df0d4bc

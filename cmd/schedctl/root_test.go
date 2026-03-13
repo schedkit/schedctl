@@ -21,7 +21,7 @@ func TestRootCmdHasSubcommands(t *testing.T) {
 	rootCmd := cmd.NewRootCmd()
 
 	expectedCommands := []string{"run", "ps", "stop", "list"}
-	actualCommands := make([]string, 0)
+	actualCommands := make([]string, 0, len(rootCmd.Commands()))
 
 	for _, command := range rootCmd.Commands() {
 		actualCommands = append(actualCommands, command.Name())
