@@ -5,7 +5,7 @@ go 1.25.8
 require (
 	github.com/anatol/vmtest v0.0.0-20230711210602-87511df0d4bc
 	github.com/containerd/containerd/v2 v2.0.4
-	github.com/containers/podman/v5 v5.8.1
+	github.com/containers/podman/v5 v5.8.2
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
@@ -79,7 +79,7 @@ require (
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/containerd/plugin v1.0.0 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.18.1 // indirect
-	github.com/containers/buildah v1.43.0 // indirect
+	github.com/containers/buildah v1.43.1 // indirect
 	github.com/containers/libtrust v0.0.0-20230121012942-c1716e8a8d01 // indirect
 	github.com/containers/ocicrypt v1.2.1 // indirect
 	github.com/containers/psgo v1.9.1-0.20250826150930-4ae76f200c86 // indirect
@@ -93,7 +93,7 @@ require (
 	github.com/docker/go-connections v0.6.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/godbus/dbus/v5 v5.1.1-0.20241109141217-c266b19b28e9 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-containerregistry v0.20.7 // indirect
@@ -138,8 +138,8 @@ require (
 	github.com/vbatts/tar-split v0.12.2 // indirect
 	github.com/vbauerster/mpb/v8 v8.10.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.podman.io/common v0.67.0 // indirect
-	go.podman.io/image/v5 v5.39.1 // indirect
+	go.podman.io/common v0.67.1 // indirect
+	go.podman.io/image/v5 v5.39.2 // indirect
 	go.podman.io/storage v1.62.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/term v0.42.0 // indirect
