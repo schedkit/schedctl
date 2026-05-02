@@ -2,47 +2,45 @@ package cmd_test
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"schedctl/cmd/schedctl"
+	cmd "schedctl/cmd/schedctl"
 )
 
 func TestNewListCmd(t *testing.T) {
 	listCmd := cmd.NewListCmd()
 
 	assert.NotNil(t, listCmd)
-	assert.Equal(t, "list", listCmd.Use)
-	assert.Equal(t, "list available schedulers", listCmd.Short)
+	assert.Equal(t, "list", listCmd.Name)
+	assert.Equal(t, "list available schedulers", listCmd.Usage)
 }
 
 func TestListCmdExecute(t *testing.T) {
-	listCmd := cmd.NewListCmd()
+	rootCmd := cmd.NewRootCmd()
 
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	err := listCmd.Execute()
+	err := rootCmd.Run(context.Background(), []string{"schedctl", "list"})
 	w.Close()
-	assert.NoError(t, err)
-
 	os.Stdout = oldStdout
+
+	assert.NoError(t, err)
 
 	var buf bytes.Buffer
 	_, err = io.Copy(&buf, r)
-
 	assert.NoError(t, err)
-	output := buf.String()
-	assert.NotEmpty(t, output, "List command should produce output")
+	assert.NotEmpty(t, buf.String(), "List command should produce output")
 }
 
-func TestListCmdHasNoFlags(t *testing.T) {
+func TestListCmdHasNoLocalFlags(t *testing.T) {
 	listCmd := cmd.NewListCmd()
 
-	assert.False(t, listCmd.HasPersistentFlags(), "List command should not have persistent flags")
-	assert.False(t, listCmd.HasLocalFlags(), "List command should not have local flags")
+	assert.Empty(t, listCmd.Flags, "List command should declare no flags of its own")
 }

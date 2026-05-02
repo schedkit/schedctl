@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"text/tabwriter"
 
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v3"
 
 	"schedctl/internal/constants"
 	"schedctl/internal/containerd"
@@ -13,20 +14,16 @@ import (
 	"schedctl/internal/podman"
 )
 
-func NewPsCmd() *cobra.Command {
-	psCmd := &cobra.Command{
-		Use:   "ps",
-		Short: "list running schedulers",
-		RunE:  ps,
+func NewPsCmd() *cli.Command {
+	return &cli.Command{
+		Name:   "ps",
+		Usage:  "list running schedulers",
+		Action: psAction,
 	}
-
-	psCmd.PersistentFlags().StringP("driver", "d", "podman", "The driver to use: containerd, podman")
-
-	return psCmd
 }
 
-func ps(cmd *cobra.Command, _ []string) error {
-	driver := cmd.Flags().Lookup("driver").Value.String()
+func psAction(_ context.Context, cmd *cli.Command) error {
+	driver := cmd.String("driver")
 
 	containersList := make([]containers.Container, 0)
 

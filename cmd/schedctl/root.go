@@ -1,27 +1,46 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/urfave/cli/v3"
+)
+
+const (
+	categoryRuntime = "Container runtime:"
+	categoryProcess = "Process control:"
 )
 
 func Execute() {
 	rootCmd := NewRootCmd()
-	cobra.CheckErr(rootCmd.Execute())
+	if err := rootCmd.Run(context.Background(), os.Args); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
-func NewRootCmd() *cobra.Command {
-	var rootCmd = &cobra.Command{
-		Use:   "schedctl",
-		Short: "Plug and play bpf schedulers for fun and profit",
-		Long:  `Plug and play bpf schedulers for fun and profit`,
-		Run:   func(_ *cobra.Command, _ []string) {},
+func NewRootCmd() *cli.Command {
+	return &cli.Command{
+		Name:                  "schedctl",
+		Usage:                 "Plug and play bpf schedulers for fun and profit",
+		Description:           "Plug and play bpf schedulers for fun and profit",
+		EnableShellCompletion: true,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "driver",
+				Aliases:  []string{"d"},
+				Usage:    "container runtime to use: containerd, podman",
+				Value:    "podman",
+				Category: categoryRuntime,
+			},
+		},
+		Commands: []*cli.Command{
+			NewListCmd(),
+			NewRunCmd(),
+			NewPsCmd(),
+			NewStopCmd(),
+		},
 	}
-
-	rootCmd.AddCommand(NewRunCmd())
-	rootCmd.AddCommand(NewPsCmd())
-	rootCmd.AddCommand(NewStopCmd())
-	rootCmd.AddCommand(NewListCmd())
-	// TODO status
-
-	return rootCmd
 }
