@@ -90,6 +90,34 @@ func TestBuildManagedMismatch(t *testing.T) {
 	assert.Contains(t, r.Discrepancy, "lavd")
 }
 
+// scx_rusty registers a struct_ops name that embeds the build version and
+// target triple, e.g. "rusty_1.1.0_x86_64_unknown_linux_gnu". The match must
+// not flag that as a discrepancy.
+func TestBuildRunningWithVersionedOps(t *testing.T) {
+	managed := []containers.Container{{Name: "scx_rusty"}}
+	kernel := sched_ext.State{
+		Supported: true,
+		Enabled:   true,
+		Ops:       "rusty_1.1.0_x86_64_unknown_linux_gnu",
+	}
+
+	r := status.Build("podman", managed, kernel)
+
+	assert.Equal(t, status.StatusRunning, r.Status)
+}
+
+// On a name collision podman.Run appends a 6-char hex suffix, e.g.
+// "scx_rusty-a1b2c3". That must still be considered a match against ops
+// "rusty".
+func TestBuildRunningWithRandomSuffixedContainer(t *testing.T) {
+	managed := []containers.Container{{Name: "scx_rusty-a1b2c3"}}
+	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: "rusty"}
+
+	r := status.Build("podman", managed, kernel)
+
+	assert.Equal(t, status.StatusRunning, r.Status)
+}
+
 func TestBuildMultipleManaged(t *testing.T) {
 	managed := []containers.Container{
 		{Name: "scx_rusty"},

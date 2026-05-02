@@ -125,16 +125,47 @@ func Build(driver string, managed []containers.Container, kernel sched_ext.State
 }
 
 // matchesOps reports whether the scheduler name aligns with the ops name the
-// kernel exposes. scx schedulers conventionally prefix their binary with
-// "scx_" while the ops name does not, so we accept both forms.
+// kernel exposes. The match is lenient on purpose:
+//
+//   - scx schedulers conventionally prefix their binary with "scx_" while the
+//     ops name does not (scx_rusty / rusty), so we strip that.
+//   - some schedulers append metadata to the struct_ops name. scx_rusty for
+//     example registers as e.g. "rusty_1.1.0_x86_64_unknown_linux_gnu".
+//   - schedctl itself appends a random hex suffix to the container name on a
+//     name collision (scx_rusty-a1b2c3).
+//
+// We treat names as matching when either the normalized container name or
+// the ops name is a prefix of the other, bounded by "_" or "-".
 func matchesOps(name, ops string) bool {
 	if ops == "" {
 		return false
 	}
-	if name == ops {
+	norm := strings.TrimPrefix(strings.ToLower(name), "scx_")
+	opsLower := strings.ToLower(ops)
+
+	if norm == opsLower {
 		return true
 	}
-	if strings.TrimPrefix(name, "scx_") == ops {
+	if hasTokenPrefix(opsLower, norm) {
+		return true
+	}
+	if hasTokenPrefix(norm, opsLower) {
+		return true
+	}
+	return false
+}
+
+// hasTokenPrefix reports whether s starts with prefix and the next character
+// is a token boundary ("_" or "-").
+func hasTokenPrefix(s, prefix string) bool {
+	if prefix == "" || !strings.HasPrefix(s, prefix) {
+		return false
+	}
+	if len(s) == len(prefix) {
+		return true
+	}
+	switch s[len(prefix)] {
+	case '_', '-':
 		return true
 	}
 	return false
