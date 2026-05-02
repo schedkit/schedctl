@@ -1,23 +1,23 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
+	"context"
+
+	"github.com/urfave/cli/v3"
 
 	"schedctl/internal/output"
 	"schedctl/internal/schedulers"
 )
 
-func NewListCmd() *cobra.Command {
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "list available schedulers",
-		RunE:  list,
+func NewListCmd() *cli.Command {
+	return &cli.Command{
+		Name:   "list",
+		Usage:  "list available schedulers",
+		Action: listAction,
 	}
-
-	return listCmd
 }
 
-func list(_ *cobra.Command, _ []string) error {
+func listAction(_ context.Context, _ *cli.Command) error {
 	for key := range schedulers.List() {
 		_, _ = output.Out("%s\n", key)
 	}
