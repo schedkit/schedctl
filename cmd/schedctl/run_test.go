@@ -35,6 +35,7 @@ func TestRunCmdHasAttachFlag(t *testing.T) {
 func TestRunCmdAttachFlagIsCategorized(t *testing.T) {
 	runCmd := cmd.NewRunCmd()
 
-	attachFlag := lookupFlag(runCmd.Flags, "attach").(*cli.BoolFlag)
+	attachFlag, ok := lookupFlag(runCmd.Flags, "attach").(*cli.BoolFlag)
+	assert.True(t, ok, "attach flag should be a *cli.BoolFlag")
 	assert.NotEmpty(t, attachFlag.Category, "attach flag should be assigned to a category for help output")
 }
