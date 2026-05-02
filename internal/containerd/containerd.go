@@ -59,9 +59,23 @@ func List(client *containerd.Client) ([]containers.Container, error) {
 
 		pid := int(task.Pid())
 
+		info, err := container.Info(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get container info: %w", err)
+		}
+
+		var imageID string
+		if img, err := client.GetImage(ctx, info.Image); err == nil {
+			imageID = img.Target().Digest.String()
+		}
+
 		listedContainer := containers.Container{
-			PID: pid,
-			ID:  id,
+			ID:        id,
+			PID:       pid,
+			Name:      id,
+			Image:     info.Image,
+			ImageID:   imageID,
+			StartedAt: info.CreatedAt.UTC(),
 		}
 
 		listedContainers = append(listedContainers, listedContainer)
