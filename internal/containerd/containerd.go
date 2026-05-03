@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	containerd "github.com/containerd/containerd/v2/client"
 	"github.com/containerd/containerd/v2/pkg/cio"
@@ -17,6 +18,14 @@ import (
 	"schedctl/internal/containers"
 	"schedctl/internal/output"
 )
+
+func taskStartTime(pid int) (time.Time, error) {
+	fi, err := os.Stat(fmt.Sprintf("/proc/%d", pid))
+	if err != nil {
+		return time.Time{}, err
+	}
+	return fi.ModTime().UTC(), nil
+}
 
 func generateRandomSuffix() (string, error) {
 	bytes := make([]byte, 3)
@@ -69,13 +78,18 @@ func List(client *containerd.Client) ([]containers.Container, error) {
 			imageID = img.Target().Digest.String()
 		}
 
+		startedAt := info.CreatedAt.UTC()
+		if t, err := taskStartTime(pid); err == nil {
+			startedAt = t
+		}
+
 		listedContainer := containers.Container{
 			ID:        id,
 			PID:       pid,
 			Name:      id,
 			Image:     info.Image,
 			ImageID:   imageID,
-			StartedAt: info.CreatedAt.UTC(),
+			StartedAt: startedAt,
 		}
 
 		listedContainers = append(listedContainers, listedContainer)
