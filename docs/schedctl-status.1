@@ -1,0 +1,224 @@
+.TH SCHEDCTL-STATUS 1 "2026-05-02" "schedctl" "User Commands"
+.SH NAME
+schedctl-status \- report what schedctl is managing and the kernel sched_ext state
+.SH SYNOPSIS
+.B schedctl status
+[\fB\-o\fR \fIformat\fR | \fB\-\-output\fR=\fIformat\fR]
+[\fB\-d\fR \fIdriver\fR | \fB\-\-driver\fR=\fIdriver\fR]
+.SH DESCRIPTION
+.B schedctl status
+reports the scheduler currently managed by schedctl, including the
+container image and digest it was started from, the start time, the
+container runtime in use, and the attachment state reported by the
+kernel via
+.IR /sys/kernel/sched_ext/ .
+.PP
+This is the bridge between
+.B schedctl run
+and
+.B schedctl stop
+\(em it tells the user what state schedctl believes it is in,
+without falling back to
+.BR podman\ ps
+or reading sysfs directly.
+.PP
+The command surfaces discrepancies between schedctl's view of the
+world and the kernel's view as a non-zero exit. For example, if the
+kernel reports a sched_ext scheduler attached but no container is
+managed by schedctl, that is reported as
+.B orphaned-kernel-state
+rather than silently treated as idle.
+.SH OPTIONS
+.TP
+.BR \-o ", " \-\-output =\fIformat\fR
+Output format. One of
+.B text
+(default, human-readable summary) or
+.B json
+(stable schema, see
+.B JSON OUTPUT
+below).
+.TP
+.BR \-d ", " \-\-driver =\fIdriver\fR
+Container runtime to query. One of
+.B podman
+(default) or
+.BR containerd .
+Inherited from the global
+.B \-\-driver
+flag.
+.SH EXIT STATUS
+.TP
+.B 0
+A scheduler is running normally, or no scheduler is running. Both
+states are reported with a clear message and exit zero.
+.TP
+.B 1
+Generic error. The container runtime could not be queried, the
+.B \-\-output
+value is invalid, or another setup-level failure occurred.
+.TP
+.B 2
+Discrepancy between schedctl's view and the kernel's view. The
+.B status
+field in the report identifies which kind of discrepancy was
+detected (see
+.B STATUS VALUES
+below).
+.SH STATUS VALUES
+The
+.B status
+field takes one of the following stable string values. These
+values are part of the JSON schema and will not be renamed without
+a schema version bump.
+.TP
+.B idle
+No managed scheduler and the kernel reports no attached ops. Exit 0.
+.TP
+.B running
+A managed scheduler is running and the kernel reports a matching
+attached ops. Exit 0.
+.TP
+.B orphaned-kernel-state
+The kernel reports a sched_ext ops attached, but schedctl is not
+managing any scheduler. Indicates a scheduler started outside
+schedctl, or schedctl-managed state was lost. Exit 2.
+.TP
+.B managed-detached
+schedctl is managing a scheduler container but the kernel reports
+no ops attached. Likely the container is running but has not
+attached its BPF program, or it crashed without cleaning up. Exit 2.
+.TP
+.B managed-mismatch
+schedctl is managing a scheduler container, the kernel reports
+a different ops attached than the one schedctl expected. Exit 2.
+.TP
+.B multiple-managed
+schedctl is managing more than one scheduler container. Only one
+sched_ext scheduler can be attached at a time. Exit 2.
+.SH JSON OUTPUT
+.B \-\-output json
+emits a single JSON document on stdout. The schema is versioned
+through the
+.B schema_version
+field; consumers should reject documents whose
+.B schema_version
+does not match a version they understand.
+.PP
+.B Top-level fields:
+.RS
+.TP
+.B schema_version
+String. The current value is
+.BR "1" .
+Bumped on any breaking change.
+.TP
+.B status
+String. One of the values listed under
+.BR "STATUS VALUES" .
+.TP
+.B driver
+String. The container runtime that was queried
+.RB ( podman
+or
+.BR containerd ).
+.TP
+.B scheduler
+Object. Present iff schedctl is managing exactly one scheduler. See
+.B "Scheduler object"
+below. Omitted otherwise.
+.TP
+.B kernel
+Object. Always present. See
+.B "Kernel object"
+below.
+.TP
+.B discrepancy
+String. Present iff
+.B status
+indicates a discrepancy. Carries a human-readable description.
+Omitted when
+.B status
+is
+.B idle
+or
+.BR running .
+.RE
+.PP
+.B Scheduler object:
+.RS
+.TP
+.B name
+String. The container/scheduler name as schedctl knows it
+(e.g.
+.IR scx_rusty ).
+.TP
+.B container_id
+String. The container ID assigned by the runtime.
+.TP
+.B image
+String. Image reference the container was started from.
+.TP
+.B image_id
+String. Image digest. Omitted when the runtime did not surface one.
+.TP
+.B pid
+Number. Host PID of the container's primary process.
+.TP
+.B started_at
+String, RFC 3339 timestamp in UTC.
+.RE
+.PP
+.B Kernel object:
+.RS
+.TP
+.B supported
+Boolean.
+.B true
+iff
+.I /sys/kernel/sched_ext
+exists.
+.TP
+.B enabled
+Boolean.
+.B true
+iff
+.I /sys/kernel/sched_ext/state
+reads as
+.IR enabled .
+.TP
+.B ops
+String. Contents of
+.IR /sys/kernel/sched_ext/root/ops ,
+or the empty string when no ops are attached.
+.RE
+.SH EXAMPLES
+.PP
+Human-readable status:
+.PP
+.RS
+.nf
+$ schedctl status
+scheduler running: scx_rusty
+  driver:     podman
+  container:  3a7f...
+  image:      ghcr.io/sched-ext/scx_rusty:latest
+  digest:     sha256:abcd...
+  pid:        4242
+  started:    2026-05-02T10:30:00Z
+  kernel:     enabled, ops=rusty
+.fi
+.RE
+.PP
+JSON output for scripts:
+.PP
+.RS
+.nf
+$ schedctl status --output json | jq -r .status
+running
+.fi
+.RE
+.SH SEE ALSO
+.BR schedctl (1),
+.BR schedctl-run (1),
+.BR schedctl-stop (1)

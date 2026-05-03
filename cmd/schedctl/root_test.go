@@ -42,7 +42,7 @@ func TestNewRootCmd(t *testing.T) {
 func TestRootCmdHasSubcommands(t *testing.T) {
 	rootCmd := cmd.NewRootCmd()
 
-	expected := []string{"run", "ps", "stop", "list"}
+	expected := []string{"run", "ps", "stop", "list", "status"}
 	for _, name := range expected {
 		assert.NotNil(t, findSubcommand(rootCmd, name), "Root command should have %s subcommand", name)
 	}
@@ -51,7 +51,7 @@ func TestRootCmdHasSubcommands(t *testing.T) {
 func TestRootCmdSubcommandCount(t *testing.T) {
 	rootCmd := cmd.NewRootCmd()
 
-	assert.Equal(t, 4, len(rootCmd.Commands), "Root command should declare exactly 4 subcommands")
+	assert.Equal(t, 5, len(rootCmd.Commands), "Root command should declare exactly 5 subcommands")
 }
 
 func TestRootCmdHasDriverPersistentFlag(t *testing.T) {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/containers/podman/v5/pkg/bindings"
 	podman_containers "github.com/containers/podman/v5/pkg/bindings/containers"
@@ -164,12 +165,23 @@ func List() ([]containers.Container, error) {
 	for _, container := range podmanRunningContainers {
 		ID := container.ID
 		PID := container.Pid
-		Name := container.Names[0]
+		Name := ID
+		if len(container.Names) > 0 {
+			Name = container.Names[0]
+		}
+
+		var startedAt time.Time
+		if container.StartedAt > 0 {
+			startedAt = time.Unix(container.StartedAt, 0).UTC()
+		}
 
 		listedContainer := containers.Container{
-			ID:   ID,
-			PID:  PID,
-			Name: Name,
+			ID:        ID,
+			PID:       PID,
+			Name:      Name,
+			Image:     container.Image,
+			ImageID:   container.ImageID,
+			StartedAt: startedAt,
 		}
 
 		listedContainers = append(listedContainers, listedContainer)
