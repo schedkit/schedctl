@@ -1,0 +1,57 @@
+.nh
+.TH schedctl 1
+
+.SH NAME
+schedctl \- Plug and play bpf schedulers for fun and profit
+
+
+.SH SYNOPSIS
+schedctl
+
+.EX
+[--driver|-d]=[value]
+.EE
+
+
+.SH DESCRIPTION
+Plug and play bpf schedulers for fun and profit
+
+.PP
+\fBUsage\fP:
+
+.EX
+schedctl [GLOBAL OPTIONS] [command [COMMAND OPTIONS]] [ARGUMENTS...]
+.EE
+
+
+.SH GLOBAL OPTIONS
+\fB--driver, -d\fP="": container runtime to use: containerd, podman (default: "podman")
+
+
+.SH COMMANDS
+.SH list
+list available schedulers
+
+.SH run
+Run a specific scheduler
+
+.PP
+\fB--attach, -a\fP: attach to the current process instead of detaching
+
+.SH ps
+list running schedulers
+
+.SH stop
+stop a scheduler
+
+.SH status
+report what schedctl is managing and the kernel sched_ext state
+
+.PP
+\fB--output, -o\fP="": output format: text, json (default: "text")
+
+.SH doctor
+check host readiness for sched_ext schedulers
+
+.PP
+\fB--output, -o\fP="": output format: text, json (default: "text")

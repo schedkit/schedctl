@@ -1,52 +1,47 @@
-.TH SCHEDCTL-STATUS 1 "2026-05-02" "schedctl" "User Commands"
+.nh
+.TH schedctl-status 1
+
 .SH NAME
 schedctl-status \- report what schedctl is managing and the kernel sched_ext state
+
+
 .SH SYNOPSIS
-.B schedctl status
-[\fB\-o\fR \fIformat\fR | \fB\-\-output\fR=\fIformat\fR]
-[\fB\-d\fR \fIdriver\fR | \fB\-\-driver\fR=\fIdriver\fR]
+schedctl-status
+
+.EX
+[--driver|-d]=[value]
+[--output|-o]=[value]
+.EE
+
+
 .SH DESCRIPTION
-.B schedctl status
-reports the scheduler currently managed by schedctl, including the
+Report the scheduler currently managed by schedctl, including the
 container image and digest it was started from, the start time, the
-container runtime in use, and the attachment state reported by the
-kernel via
-.IR /sys/kernel/sched_ext/ .
+container runtime in use, and the attachment state reported by the kernel
+via /sys/kernel/sched_ext/.
+
 .PP
-This is the bridge between
-.B schedctl run
-and
-.B schedctl stop
-\(em it tells the user what state schedctl believes it is in,
-without falling back to
-.BR podman\ ps
-or reading sysfs directly.
+Exit codes:
+  0  scheduler running normally, or no scheduler running
+  1  generic error (failed to query the runtime, etc.)
+  2  schedctl's view and the kernel's view do not agree
+
 .PP
-The command surfaces discrepancies between schedctl's view of the
-world and the kernel's view as a non-zero exit. For example, if the
-kernel reports a sched_ext scheduler attached but no container is
-managed by schedctl, that is reported as
-.B orphaned-kernel-state
-rather than silently treated as idle.
-.SH OPTIONS
-.TP
-.BR \-o ", " \-\-output =\fIformat\fR
-Output format. One of
-.B text
-(default, human-readable summary) or
-.B json
-(stable schema, see
-.B JSON OUTPUT
-below).
-.TP
-.BR \-d ", " \-\-driver =\fIdriver\fR
-Container runtime to query. One of
-.B podman
-(default) or
-.BR containerd .
-Inherited from the global
-.B \-\-driver
-flag.
+See schedctl-status(1) for the full JSON schema.
+
+.PP
+\fBUsage\fP:
+
+.EX
+schedctl status
+.EE
+
+
+.SH GLOBAL OPTIONS
+\fB--driver, -d\fP="": container runtime to use: containerd, podman (default: "podman")
+
+.PP
+\fB--output, -o\fP="": output format: text, json (default: "text")
 .SH EXIT STATUS
 .TP
 .B 0

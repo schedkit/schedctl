@@ -8,6 +8,7 @@ require (
 	github.com/containers/podman/v5 v5.8.2
 	github.com/stretchr/testify v1.11.1
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
+	github.com/urfave/cli-docs/v3 v3.1.0
 	github.com/urfave/cli/v3 v3.8.0
 	golang.org/x/crypto v0.50.0
 )
@@ -81,6 +82,7 @@ require (
 	github.com/containers/ocicrypt v1.2.1 // indirect
 	github.com/containers/psgo v1.9.1-0.20250826150930-4ae76f200c86 // indirect
 	github.com/coreos/go-systemd/v22 v22.6.0 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/cyberphone/json-canonicalization v0.0.0-20241213102144-19d51d7fe467 // indirect
 	github.com/cyphar/filepath-securejoin v0.5.2 // indirect
 	github.com/disiqueira/gotree/v3 v3.0.2 // indirect
@@ -122,6 +124,7 @@ require (
 	github.com/pkg/sftp v1.13.9 // indirect
 	github.com/proglottis/gpgme v0.1.5 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/secure-systems-lab/go-securesystemslib v0.9.1 // indirect
 	github.com/sigstore/fulcio v1.8.5 // indirect
 	github.com/sigstore/protobuf-specs v0.5.0 // indirect

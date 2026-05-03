@@ -1,0 +1,32 @@
+.nh
+.TH schedctl-doctor 1
+
+.SH NAME
+schedctl-doctor \- check host readiness for sched_ext schedulers
+
+
+.SH SYNOPSIS
+schedctl-doctor
+
+.EX
+[--driver|-d]=[value]
+[--output|-o]=[value]
+.EE
+
+
+.SH DESCRIPTION
+Run sanity checks against the host (kernel, capabilities, container runtime). Exits non-zero when any blocking check fails.
+
+.PP
+\fBUsage\fP:
+
+.EX
+schedctl doctor
+.EE
+
+
+.SH GLOBAL OPTIONS
+\fB--driver, -d\fP="": container runtime to use: containerd, podman (default: "podman")
+
+.PP
+\fB--output, -o\fP="": output format: text, json (default: "text")
