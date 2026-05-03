@@ -42,6 +42,7 @@ func NewRootCmd() *cli.Command {
 			NewPsCmd(),
 			NewStopCmd(),
 			NewStatusCmd(),
+			NewDoctorCmd(),
 		},
 	}
 }
