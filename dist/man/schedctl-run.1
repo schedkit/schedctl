@@ -1,0 +1,41 @@
+.nh
+.TH schedctl-run 1
+
+.SH NAME
+schedctl-run \- Run a specific scheduler
+
+
+.SH SYNOPSIS
+schedctl-run
+
+.EX
+[--attach|-a]
+[--driver|-d]=[value]
+.EE
+
+
+.SH DESCRIPTION
+Run a specific scheduler with optional arguments.
+
+.PP
+Arguments after -- are passed to the scheduler container.
+
+.PP
+Examples:
+  schedctl run scx_rusty
+  schedctl run scx_rusty -- --verbose
+  schedctl run --attach scx_rusty -- --mode=performance --interval=100
+
+.PP
+\fBUsage\fP:
+
+.EX
+schedctl run SCHEDULER [-- ARGS...]
+.EE
+
+
+.SH GLOBAL OPTIONS
+\fB--attach, -a\fP: attach to the current process instead of detaching
+
+.PP
+\fB--driver, -d\fP="": container runtime to use: containerd, podman (default: "podman")
