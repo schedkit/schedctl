@@ -44,7 +44,7 @@ func capCheckFunc(bit uint) CheckFunc {
 	return func() (Status, string) {
 		eff, err := readEffectiveCaps()
 		if err != nil {
-			return StatusSkip, err.Error()
+			return StatusFail, err.Error()
 		}
 		if eff&(uint64(1)<<bit) != 0 {
 			return StatusPass, fmt.Sprintf("CapEff bit %d set", bit)
