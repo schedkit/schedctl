@@ -184,6 +184,10 @@ func readKernelConfig() (map[string]string, error) {
 			}
 			out[line[:eq]] = line[eq+1:]
 		}
+		if err := scanner.Err(); err != nil {
+			_ = f.Close()
+			return nil, fmt.Errorf("read %s: %w", path, err)
+		}
 		_ = f.Close()
 		return out, nil
 	}
