@@ -133,7 +133,7 @@ func checkBTF() (Status, string) {
 func checkKernelConfig() (Status, string) {
 	cfg, err := readKernelConfig()
 	if err != nil {
-		return StatusSkip, "kernel config not readable; install kernel-headers or enable CONFIG_IKCONFIG_PROC"
+		return StatusFail, "kernel config not readable; install kernel-headers or enable CONFIG_IKCONFIG_PROC"
 	}
 	required := requiredKernelConfigs()
 	missing := make([]string, 0, len(required))
