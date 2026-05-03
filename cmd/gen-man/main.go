@@ -61,7 +61,7 @@ func writeMan(c *cli.Command, page, path, extrasDir string) error {
 		}
 		body += extras
 	}
-	return os.WriteFile(path, []byte(body), 0o644)
+	return os.WriteFile(path, []byte(body), 0o644) //nolint:gosec
 }
 
 func readExtras(dir, page string) (string, error) {
