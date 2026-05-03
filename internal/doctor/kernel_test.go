@@ -39,6 +39,6 @@ func TestParseKernelVersion(t *testing.T) {
 	}
 }
 
-func TestIsSocketReportsFalseForMissingPath(t *testing.T) {
-	assert.False(t, doctor.IsSocket("/this/path/does/not/exist/schedctl-doctor"))
+func TestSocketReachableReportsFalseForMissingPath(t *testing.T) {
+	assert.False(t, doctor.SocketReachable("/this/path/does/not/exist/schedctl-doctor"))
 }

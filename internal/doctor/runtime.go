@@ -1,13 +1,13 @@
 package doctor
 
 import (
-	"os"
-	"strconv"
+	"net"
 	"strings"
+	"time"
 )
 
 func runtimeChecks() []Check {
-	podmanPaths := podmanSocketCandidates()
+	podmanPaths := []string{"/run/podman/podman.sock"}
 	containerdPaths := []string{"/run/containerd/containerd.sock"}
 
 	return []Check{
@@ -34,7 +34,7 @@ func runtimeChecks() []Check {
 				all := append([]string{}, podmanPaths...)
 				all = append(all, containerdPaths...)
 				for _, p := range all {
-					if isSocket(p) {
+					if socketReachable(p) {
 						return StatusPass, p
 					}
 				}
@@ -44,20 +44,10 @@ func runtimeChecks() []Check {
 	}
 }
 
-func podmanSocketCandidates() []string {
-	paths := []string{"/run/podman/podman.sock"}
-	if rt := os.Getenv("XDG_RUNTIME_DIR"); rt != "" {
-		paths = append(paths, rt+"/podman/podman.sock")
-	} else {
-		paths = append(paths, "/run/user/"+strconv.Itoa(os.Getuid())+"/podman/podman.sock")
-	}
-	return paths
-}
-
 func socketCheckFunc(candidates []string) CheckFunc {
 	return func() (Status, string) {
 		for _, p := range candidates {
-			if isSocket(p) {
+			if socketReachable(p) {
 				return StatusPass, p
 			}
 		}
@@ -65,10 +55,11 @@ func socketCheckFunc(candidates []string) CheckFunc {
 	}
 }
 
-func isSocket(path string) bool {
-	info, err := os.Stat(path)
+func socketReachable(path string) bool {
+	conn, err := net.DialTimeout("unix", path, time.Second)
 	if err != nil {
 		return false
 	}
-	return info.Mode()&os.ModeSocket != 0
+	conn.Close()
+	return true
 }
