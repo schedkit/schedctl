@@ -94,7 +94,13 @@ func Build(driver string, managed []containers.Container, kernel sched_ext.State
 		}
 
 		switch {
-		case !kernel.Enabled && kernel.Ops == "":
+		case !kernel.Supported:
+			report.Status = StatusManagedDetached
+			report.Discrepancy = fmt.Sprintf(
+				"schedctl is managing %q but the kernel does not support sched_ext",
+				c.Name,
+			)
+		case !kernel.Enabled || kernel.Ops == "":
 			report.Status = StatusManagedDetached
 			report.Discrepancy = fmt.Sprintf(
 				"schedctl is managing %q but the kernel reports no scheduler attached",

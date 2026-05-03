@@ -165,7 +165,7 @@ func List() ([]containers.Container, error) {
 	for _, container := range podmanRunningContainers {
 		ID := container.ID
 		PID := container.Pid
-		Name := ""
+		Name := ID
 		if len(container.Names) > 0 {
 			Name = container.Names[0]
 		}

@@ -78,6 +78,45 @@ func TestBuildManagedDetached(t *testing.T) {
 	assert.True(t, r.IsDiscrepancy())
 }
 
+// Kernel reports a non-empty ops name but state file says disabled (or is
+// missing, leaving Enabled=false). The container name aligning with ops is
+// not enough to call this "running" — sched_ext itself is not enabled.
+func TestBuildManagedDetachedDisabledWithOps(t *testing.T) {
+	managed := []containers.Container{{Name: "scx_rusty"}}
+	kernel := sched_ext.State{Supported: true, Enabled: false, Ops: "rusty"}
+
+	r := status.Build("podman", managed, kernel)
+
+	assert.Equal(t, status.StatusManagedDetached, r.Status)
+	assert.True(t, r.IsDiscrepancy())
+	assert.Contains(t, r.Discrepancy, "scx_rusty")
+}
+
+// Kernel reports enabled but no ops name. No scheduler is actually attached.
+func TestBuildManagedDetachedEnabledWithoutOps(t *testing.T) {
+	managed := []containers.Container{{Name: "scx_rusty"}}
+	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: ""}
+
+	r := status.Build("podman", managed, kernel)
+
+	assert.Equal(t, status.StatusManagedDetached, r.Status)
+	assert.True(t, r.IsDiscrepancy())
+}
+
+// Kernel does not support sched_ext at all but a scheduler container is
+// running. Distinct detail message so the user is not told the kernel is
+// "detached" when in fact sched_ext is missing entirely.
+func TestBuildManagedDetachedKernelUnsupported(t *testing.T) {
+	managed := []containers.Container{{Name: "scx_rusty"}}
+	kernel := sched_ext.State{Supported: false}
+
+	r := status.Build("podman", managed, kernel)
+
+	assert.Equal(t, status.StatusManagedDetached, r.Status)
+	assert.True(t, r.IsDiscrepancy())
+	assert.Contains(t, r.Discrepancy, "does not support sched_ext")
+}
+
 func TestBuildManagedMismatch(t *testing.T) {
 	managed := []containers.Container{{Name: "scx_rusty"}}
 	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: "lavd"}
