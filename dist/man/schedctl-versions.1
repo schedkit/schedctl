@@ -1,0 +1,34 @@
+.nh
+.TH schedctl-versions 1
+
+.SH NAME
+schedctl-versions \- list available versions for a scheduler
+
+
+.SH SYNOPSIS
+schedctl-versions
+
+.EX
+[--driver|-d]=[value]
+.EE
+
+
+.SH DESCRIPTION
+Query the container registry for all available versions (tags)
+of the given scheduler.
+
+.PP
+Examples:
+  schedctl versions scx_rusty
+  schedctl versions ghcr.io/myorg/custom-scheduler
+
+.PP
+\fBUsage\fP:
+
+.EX
+schedctl versions SCHEDULER
+.EE
+
+
+.SH GLOBAL OPTIONS
+\fB--driver, -d\fP="": container runtime to use: containerd, podman (default: "podman")
