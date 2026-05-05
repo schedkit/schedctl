@@ -43,6 +43,7 @@ func NewRootCmd() *cli.Command {
 			NewStopCmd(),
 			NewStatusCmd(),
 			NewDoctorCmd(),
+			NewVersionsCmd(),
 		},
 	}
 }
