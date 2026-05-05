@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/google/go-containerregistry/pkg/crane"
+
 	"schedctl/internal/output"
 )
 
@@ -94,25 +96,65 @@ func ensureImageTag(image string) string {
 	return image
 }
 
-func GetScheduler(id string) (SchedulerImage, error) {
+func imageRepo(image string) string {
+	if idx := strings.Index(image, "@"); idx != -1 {
+		return image[:idx]
+	}
+
+	parts := strings.Split(image, "/")
+	last := parts[len(parts)-1]
+
+	if idx := strings.Index(last, ":"); idx != -1 {
+		parts[len(parts)-1] = last[:idx]
+	}
+
+	return strings.Join(parts, "/")
+}
+
+func GetScheduler(id, version string) (SchedulerImage, error) {
 	var result SchedulerImage
 
 	manifest := List()
 	for key, entry := range manifest {
 		if key == id {
-			result.ImageURI = ensureImageTag(entry.ImageURI)
+			result.ImageURI = resolveImageVersion(entry.ImageURI, version)
 			result.Source = SourceManifest
 			return result, nil
 		}
 	}
 
 	if isContainerImage(id) {
-		result.ImageURI = ensureImageTag(id)
+		result.ImageURI = resolveImageVersion(id, version)
 		result.Source = SourceDirect
 		return result, nil
 	}
 
 	return result, errors.New(
+		"scheduler not found in manifest and input does not appear to be a valid container image URI",
+	)
+}
+
+func resolveImageVersion(image, version string) string {
+	if version != "" {
+		return imageRepo(image) + ":" + version
+	}
+
+	return ensureImageTag(image)
+}
+
+func ListVersions(id string) ([]string, error) {
+	manifest := List()
+	for key, entry := range manifest {
+		if key == id {
+			return crane.ListTags(imageRepo(entry.ImageURI))
+		}
+	}
+
+	if isContainerImage(id) {
+		return crane.ListTags(imageRepo(id))
+	}
+
+	return nil, errors.New(
 		"scheduler not found in manifest and input does not appear to be a valid container image URI",
 	)
 }

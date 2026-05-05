@@ -32,6 +32,18 @@ func TestRunCmdHasAttachFlag(t *testing.T) {
 	assert.True(t, boolFlag.Local, "attach flag should be local to the run command")
 }
 
+func TestRunCmdHasVersionFlag(t *testing.T) {
+	runCmd := cmd.NewRunCmd()
+
+	versionFlag := lookupFlag(runCmd.Flags, "version")
+	assert.NotNil(t, versionFlag, "run command should have 'version' flag")
+
+	stringFlag, ok := versionFlag.(*cli.StringFlag)
+	assert.True(t, ok, "version flag should be a StringFlag")
+	assert.Equal(t, "", stringFlag.Value, "version flag should default to empty string")
+	assert.True(t, stringFlag.Local, "version flag should be local to the run command")
+}
+
 func TestRunCmdAttachFlagIsCategorized(t *testing.T) {
 	runCmd := cmd.NewRunCmd()
 

@@ -24,6 +24,7 @@ Arguments after -- are passed to the scheduler container.
 
 Examples:
   schedctl run scx_rusty
+  schedctl run scx_rusty --version v1.0.0
   schedctl run scx_rusty -- --verbose
   schedctl run --attach scx_rusty -- --mode=performance --interval=100`,
 		Flags: []cli.Flag{
@@ -31,6 +32,12 @@ Examples:
 				Name:     "attach",
 				Aliases:  []string{"a"},
 				Usage:    "attach to the current process instead of detaching",
+				Local:    true,
+				Category: categoryProcess,
+			},
+			&cli.StringFlag{
+				Name:     "version",
+				Usage:    "scheduler version (image tag) to run, e.g. v1.0.0",
 				Local:    true,
 				Category: categoryProcess,
 			},
@@ -49,8 +56,9 @@ func runAction(_ context.Context, cmd *cli.Command) error {
 	containerArgs := args[1:]
 	driver := cmd.String("driver")
 	attach := cmd.Bool("attach")
+	version := cmd.String("version")
 
-	result, err := schedulers.GetScheduler(schedulerID)
+	result, err := schedulers.GetScheduler(schedulerID, version)
 	if err != nil {
 		return err
 	}
