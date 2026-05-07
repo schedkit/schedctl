@@ -11,6 +11,7 @@ import (
 	"schedctl/internal/output"
 	"schedctl/internal/podman"
 	"schedctl/internal/schedulers"
+	"schedctl/internal/verify"
 )
 
 func NewRunCmd() *cli.Command {
@@ -41,12 +42,26 @@ Examples:
 				Local:    true,
 				Category: categoryProcess,
 			},
+			&cli.StringFlag{
+				Name:     "trust-policy",
+				Usage:    "path to a YAML trust policy for image signature verification",
+				Sources:  cli.EnvVars("SCHEDCTL_TRUST_POLICY"),
+				Local:    true,
+				Category: categoryProcess,
+			},
+			&cli.BoolFlag{
+				Name:     "allow-unsigned",
+				Usage:    "skip signature verification (NOT recommended; images run with elevated caps and load eBPF)",
+				Sources:  cli.EnvVars("SCHEDCTL_ALLOW_UNSIGNED"),
+				Local:    true,
+				Category: categoryProcess,
+			},
 		},
 		Action: runAction,
 	}
 }
 
-func runAction(_ context.Context, cmd *cli.Command) error {
+func runAction(ctx context.Context, cmd *cli.Command) error {
 	args := cmd.Args().Slice()
 	if len(args) == 0 {
 		return fmt.Errorf("exactly one scheduler ID required")
@@ -57,6 +72,8 @@ func runAction(_ context.Context, cmd *cli.Command) error {
 	driver := cmd.String("driver")
 	attach := cmd.Bool("attach")
 	version := cmd.String("version")
+	trustPolicyPath := cmd.String("trust-policy")
+	allowUnsigned := cmd.Bool("allow-unsigned")
 
 	result, err := schedulers.GetScheduler(schedulerID, version)
 	if err != nil {
@@ -74,6 +91,29 @@ func runAction(_ context.Context, cmd *cli.Command) error {
 		_, _ = output.Out("With arguments: %v\n", containerArgs)
 	}
 
+	imageRef := result.ImageURI
+	if allowUnsigned {
+		_, _ = output.Out("WARNING: --allow-unsigned set; skipping signature verification for %s\n", result.ImageURI)
+	} else {
+		policy, err := verify.LoadPolicy(trustPolicyPath)
+		if err != nil {
+			return fmt.Errorf("trust policy: %w", err)
+		}
+		verified, err := verify.Image(ctx, result.ImageURI, policy)
+		if err != nil {
+			return fmt.Errorf(
+				"image signature verification failed for %s: %w (pass --allow-unsigned to override)",
+				result.ImageURI, err,
+			)
+		}
+		signer := "unknown"
+		if len(verified.Signers) > 0 {
+			signer = verified.Signers[0].Describe()
+		}
+		_, _ = output.Out("Verified %s (signer: %s)\n", verified.ImageRef, signer)
+		imageRef = verified.ImageRef
+	}
+
 	if driver == constants.CONTAINERD {
 		client, err := containerd.NewClient()
 		if err != nil {
@@ -81,20 +121,20 @@ func runAction(_ context.Context, cmd *cli.Command) error {
 		}
 		defer client.Close()
 
-		err = containerd.Run(client, result.ImageURI, schedulerID, attach, true, containerArgs)
+		err = containerd.Run(client, imageRef, schedulerID, attach, true, containerArgs)
 		if err != nil {
 			return err
 		}
 	}
 
 	if driver == constants.PODMAN {
-		err := podman.Run(result.ImageURI, schedulerID, attach, containerArgs)
+		err := podman.Run(imageRef, schedulerID, attach, containerArgs)
 		if err != nil {
 			panic(err)
 		}
 
 		if !attach {
-			_, _ = output.Out("Container %s started successfully\n", result.ImageURI)
+			_, _ = output.Out("Container %s started successfully\n", imageRef)
 		}
 	}
 
