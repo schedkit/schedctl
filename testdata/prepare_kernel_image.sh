@@ -16,6 +16,7 @@ git clone --depth 1 --branch "$kernel_version" git://git.kernel.org/pub/scm/linu
 echo "Configuring kernel"
 cd kernel_source
 cp ../config .config
+make olddefconfig
 
 echo "Building kernel"
 make -j$(nproc) bzImage
