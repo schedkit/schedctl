@@ -51,3 +51,30 @@ func TestRunCmdAttachFlagIsCategorized(t *testing.T) {
 	assert.True(t, ok, "attach flag should be a *cli.BoolFlag")
 	assert.NotEmpty(t, attachFlag.Category, "attach flag should be assigned to a category for help output")
 }
+
+func TestRunCmdHasTrustPolicyFlag(t *testing.T) {
+	runCmd := cmd.NewRunCmd()
+
+	flag := lookupFlag(runCmd.Flags, "trust-policy")
+	assert.NotNil(t, flag, "run command should have 'trust-policy' flag")
+
+	stringFlag, ok := flag.(*cli.StringFlag)
+	assert.True(t, ok, "trust-policy flag should be a StringFlag")
+	assert.True(t, stringFlag.Local, "trust-policy flag should be local to the run command")
+	assert.Contains(t, stringFlag.Sources.EnvKeys(), "SCHEDCTL_TRUST_POLICY",
+		"trust-policy flag should read SCHEDCTL_TRUST_POLICY env var")
+}
+
+func TestRunCmdHasAllowUnsignedFlag(t *testing.T) {
+	runCmd := cmd.NewRunCmd()
+
+	flag := lookupFlag(runCmd.Flags, "allow-unsigned")
+	assert.NotNil(t, flag, "run command should have 'allow-unsigned' flag")
+
+	boolFlag, ok := flag.(*cli.BoolFlag)
+	assert.True(t, ok, "allow-unsigned flag should be a BoolFlag")
+	assert.False(t, boolFlag.Value, "allow-unsigned should default to false (verification on by default)")
+	assert.True(t, boolFlag.Local, "allow-unsigned flag should be local to the run command")
+	assert.Contains(t, boolFlag.Sources.EnvKeys(), "SCHEDCTL_ALLOW_UNSIGNED",
+		"allow-unsigned flag should read SCHEDCTL_ALLOW_UNSIGNED env var")
+}

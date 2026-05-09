@@ -165,3 +165,6 @@ jobs:
 
     - name: Test
       run: go test -tags containers_image_openpgp -timeout 20m -v ./...
+
+    - name: E2E signature verification (network)
+      run: go test -tags 'containers_image_openpgp e2e' -timeout 5m -v ./internal/verify/...

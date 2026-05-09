@@ -36,7 +36,13 @@ list available schedulers
 Run a specific scheduler
 
 .PP
+\fB--allow-unsigned\fP: skip signature verification (NOT recommended; images run with elevated caps and load eBPF)
+
+.PP
 \fB--attach, -a\fP: attach to the current process instead of detaching
+
+.PP
+\fB--trust-policy\fP="": path to a YAML trust policy for image signature verification
 
 .PP
 \fB--version\fP="": scheduler version (image tag) to run, e.g. v1.0.0

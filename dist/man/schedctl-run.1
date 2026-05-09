@@ -9,8 +9,10 @@ schedctl-run \- Run a specific scheduler
 schedctl-run
 
 .EX
+[--allow-unsigned]
 [--attach|-a]
 [--driver|-d]=[value]
+[--trust-policy]=[value]
 [--version]=[value]
 .EE
 
@@ -37,10 +39,16 @@ schedctl run SCHEDULER [-- ARGS...]
 
 
 .SH GLOBAL OPTIONS
+\fB--allow-unsigned\fP: skip signature verification (NOT recommended; images run with elevated caps and load eBPF)
+
+.PP
 \fB--attach, -a\fP: attach to the current process instead of detaching
 
 .PP
 \fB--driver, -d\fP="": container runtime to use: containerd, podman (default: "podman")
+
+.PP
+\fB--trust-policy\fP="": path to a YAML trust policy for image signature verification
 
 .PP
 \fB--version\fP="": scheduler version (image tag) to run, e.g. v1.0.0
