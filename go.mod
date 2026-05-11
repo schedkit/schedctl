@@ -8,13 +8,13 @@ require (
 	github.com/containers/podman/v5 v5.8.2
 	github.com/google/go-containerregistry v0.21.5
 	github.com/sigstore/cosign/v2 v2.6.3
-	github.com/sigstore/rekor v1.5.1
 	github.com/sigstore/sigstore v1.10.5
+	github.com/sigstore/sigstore-go v1.1.4
 	github.com/stretchr/testify v1.11.1
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
 	github.com/urfave/cli-docs/v3 v3.1.0
 	github.com/urfave/cli/v3 v3.8.0
-	golang.org/x/crypto v0.50.0
+	golang.org/x/crypto v0.51.0
 	sigs.k8s.io/yaml v1.6.0
 )
 
@@ -61,10 +61,10 @@ require (
 	go.opentelemetry.io/otel v1.41.0 // indirect
 	go.opentelemetry.io/otel/metric v1.41.0 // indirect
 	go.opentelemetry.io/otel/trace v1.41.0 // indirect
-	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.43.0
-	golang.org/x/text v0.36.0 // indirect
+	golang.org/x/sys v0.44.0
+	golang.org/x/text v0.37.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260217215200-42d3e9bedb6d // indirect
 	google.golang.org/grpc v1.79.3 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
@@ -180,8 +180,8 @@ require (
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
 	github.com/sigstore/fulcio v1.8.5 // indirect
 	github.com/sigstore/protobuf-specs v0.5.0 // indirect
+	github.com/sigstore/rekor v1.5.1 // indirect
 	github.com/sigstore/rekor-tiles/v2 v2.0.1 // indirect
-	github.com/sigstore/sigstore-go v1.1.4 // indirect
 	github.com/sigstore/timestamp-authority/v2 v2.0.3 // indirect
 	github.com/skeema/knownhosts v1.3.2 // indirect
 	github.com/smallstep/pkcs7 v0.1.1 // indirect
@@ -208,7 +208,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/mod v0.35.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/term v0.42.0 // indirect
+	golang.org/x/term v0.43.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260128011058-8636f8732409 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
