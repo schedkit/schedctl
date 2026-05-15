@@ -8,7 +8,7 @@ require (
 	github.com/containers/podman/v5 v5.8.2
 	github.com/google/go-containerregistry v0.21.5
 	github.com/sigstore/cosign/v2 v2.6.3
-	github.com/sigstore/sigstore v1.10.5
+	github.com/sigstore/sigstore v1.10.6
 	github.com/sigstore/sigstore-go v1.1.4
 	github.com/stretchr/testify v1.11.1
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
