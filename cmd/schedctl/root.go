@@ -13,6 +13,11 @@ const (
 	categoryProcess = "Process control:"
 )
 
+const (
+	outputText = "text"
+	outputJSON = "json"
+)
+
 func Execute() {
 	rootCmd := NewRootCmd()
 	if err := rootCmd.Run(context.Background(), os.Args); err != nil {
@@ -44,6 +49,7 @@ func NewRootCmd() *cli.Command {
 			NewStatusCmd(),
 			NewDoctorCmd(),
 			NewVersionsCmd(),
+			NewInfoCmd(),
 		},
 	}
 }
