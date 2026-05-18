@@ -12,11 +12,6 @@ import (
 
 const categoryDiagnostics = "Diagnostics:"
 
-const (
-	outputText = "text"
-	outputJSON = "json"
-)
-
 func NewDoctorCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "doctor",

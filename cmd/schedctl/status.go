@@ -37,7 +37,7 @@ See schedctl-status(1) for the full JSON schema.`,
 				Name:     "output",
 				Aliases:  []string{"o"},
 				Usage:    "output format: text, json",
-				Value:    "text",
+				Value:    outputText,
 				Local:    true,
 				Category: categoryDisplay,
 			},
@@ -50,8 +50,8 @@ func statusAction(_ context.Context, cmd *cli.Command) error {
 	driver := cmd.String("driver")
 	format := cmd.String("output")
 
-	if format != "text" && format != "json" {
-		return fmt.Errorf("unsupported --output value %q (expected: text, json)", format)
+	if format != outputText && format != outputJSON {
+		return fmt.Errorf("unsupported --output value %q (expected: %s, %s)", format, outputText, outputJSON)
 	}
 
 	managed, err := listManaged(driver)
@@ -67,7 +67,7 @@ func statusAction(_ context.Context, cmd *cli.Command) error {
 	report := status.Build(driver, managed, kernel)
 
 	switch format {
-	case "json":
+	case outputJSON:
 		if err := status.WriteJSON(os.Stdout, report); err != nil {
 			return err
 		}

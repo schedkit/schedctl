@@ -2,10 +2,10 @@ package info
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"time"
 
+	"schedctl/internal/output"
 	"schedctl/internal/schedulers"
 )
 
@@ -79,53 +79,53 @@ func WriteText(w io.Writer, r Report) {
 	if heading == "" {
 		heading = r.Scheduler
 	}
-	fmt.Fprintln(w, heading)
+	_, _ = output.Outln(w, heading)
 	if r.Description != "" {
-		fmt.Fprintf(w, "  %s\n", r.Description)
+		_, _ = output.Outf(w, "  %s\n", r.Description)
 	}
 
-	fmt.Fprintln(w)
-	fmt.Fprintf(w, "  image:        %s\n", r.ImageRef)
+	_, _ = output.Outln(w)
+	_, _ = output.Outf(w, "  image:        %s\n", r.ImageRef)
 	if r.Digest != "" {
-		fmt.Fprintf(w, "  digest:       %s\n", r.Digest)
+		_, _ = output.Outf(w, "  digest:       %s\n", r.Digest)
 	}
 	if r.Source != "" {
-		fmt.Fprintf(w, "  source:       %s\n", r.Source)
+		_, _ = output.Outf(w, "  source:       %s\n", r.Source)
 	}
 	if r.Architecture != "" || r.OS != "" {
-		fmt.Fprintf(w, "  platform:     %s/%s\n", r.OS, r.Architecture)
+		_, _ = output.Outf(w, "  platform:     %s/%s\n", r.OS, r.Architecture)
 	}
 	if r.Created != nil && !r.Created.IsZero() {
-		fmt.Fprintf(w, "  created:      %s\n", r.Created.UTC().Format(time.RFC3339))
+		_, _ = output.Outf(w, "  created:      %s\n", r.Created.UTC().Format(time.RFC3339))
 	}
 
 	if r.KernelMin != "" {
-		fmt.Fprintln(w)
-		fmt.Fprintf(w, "  kernel min:   %s\n", r.KernelMin)
+		_, _ = output.Outln(w)
+		_, _ = output.Outf(w, "  kernel min:   %s\n", r.KernelMin)
 	}
 
 	if hasOCIMetadata(r) {
-		fmt.Fprintln(w)
+		_, _ = output.Outln(w)
 		if r.Version != "" {
-			fmt.Fprintf(w, "  version:      %s\n", r.Version)
+			_, _ = output.Outf(w, "  version:      %s\n", r.Version)
 		}
 		if r.Revision != "" {
-			fmt.Fprintf(w, "  revision:     %s\n", r.Revision)
+			_, _ = output.Outf(w, "  revision:     %s\n", r.Revision)
 		}
 		if r.SourceURL != "" {
-			fmt.Fprintf(w, "  source url:   %s\n", r.SourceURL)
+			_, _ = output.Outf(w, "  source url:   %s\n", r.SourceURL)
 		}
 		if r.Documentation != "" {
-			fmt.Fprintf(w, "  docs:         %s\n", r.Documentation)
+			_, _ = output.Outf(w, "  docs:         %s\n", r.Documentation)
 		}
 		if r.Authors != "" {
-			fmt.Fprintf(w, "  authors:      %s\n", r.Authors)
+			_, _ = output.Outf(w, "  authors:      %s\n", r.Authors)
 		}
 		if r.Licenses != "" {
-			fmt.Fprintf(w, "  licenses:     %s\n", r.Licenses)
+			_, _ = output.Outf(w, "  licenses:     %s\n", r.Licenses)
 		}
 		if r.Vendor != "" {
-			fmt.Fprintf(w, "  vendor:       %s\n", r.Vendor)
+			_, _ = output.Outf(w, "  vendor:       %s\n", r.Vendor)
 		}
 	}
 }

@@ -39,7 +39,7 @@ Examples:
 				Name:     "output",
 				Aliases:  []string{"o"},
 				Usage:    "output format: text, json",
-				Value:    "text",
+				Value:    outputText,
 				Local:    true,
 				Category: categoryDisplay,
 			},
@@ -58,8 +58,8 @@ func infoAction(_ context.Context, cmd *cli.Command) error {
 	version := cmd.String("version")
 	format := cmd.String("output")
 
-	if format != "text" && format != "json" {
-		return fmt.Errorf("unsupported --output value %q (expected: text, json)", format)
+	if format != outputText && format != outputJSON {
+		return fmt.Errorf("unsupported --output value %q (expected: %s, %s)", format, outputText, outputJSON)
 	}
 
 	result, err := schedulers.GetScheduler(schedulerID, version)
@@ -75,7 +75,7 @@ func infoAction(_ context.Context, cmd *cli.Command) error {
 	report := info.Build(schedulerID, result, raw)
 
 	switch format {
-	case "json":
+	case outputJSON:
 		return info.WriteJSON(os.Stdout, report)
 	default:
 		info.WriteText(os.Stdout, report)
