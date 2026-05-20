@@ -8,10 +8,12 @@ import (
 	"schedctl/internal/schedulers"
 )
 
+const rustyRepo = "ghcr.io/schedkit/scx_rusty"
+
 func TestSchedulerFound(t *testing.T) {
 	result, err := schedulers.GetScheduler("scx_rusty", "")
 	assert.Nil(t, err)
-	assert.Equal(t, "ghcr.io/schedkit/scx_rusty:latest", result.ImageURI)
+	assert.Equal(t, rustyRepo+":latest", result.ImageURI)
 	assert.Equal(t, schedulers.SourceManifest, result.Source)
 }
 
@@ -65,7 +67,7 @@ func TestInvalidInput(t *testing.T) {
 func TestGetSchedulerWithVersion(t *testing.T) {
 	result, err := schedulers.GetScheduler("scx_rusty", "v1.0.0")
 	assert.Nil(t, err)
-	assert.Equal(t, "ghcr.io/schedkit/scx_rusty:v1.0.0", result.ImageURI)
+	assert.Equal(t, rustyRepo+":v1.0.0", result.ImageURI)
 	assert.Equal(t, schedulers.SourceManifest, result.Source)
 }
 
@@ -81,9 +83,9 @@ func TestImageRepo(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"ghcr.io/schedkit/scx_rusty:latest", "ghcr.io/schedkit/scx_rusty"},
-		{"ghcr.io/schedkit/scx_rusty", "ghcr.io/schedkit/scx_rusty"},
-		{"ghcr.io/schedkit/scx_rusty@sha256:abc123", "ghcr.io/schedkit/scx_rusty"},
+		{rustyRepo + ":latest", rustyRepo},
+		{rustyRepo, rustyRepo},
+		{rustyRepo + "@sha256:abc123", rustyRepo},
 		{"localhost:5000/myimage:v1", "localhost:5000/myimage"},
 		{"docker.io/nginx:alpine", "docker.io/nginx"},
 	}

@@ -36,9 +36,9 @@ Examples:
 				Category: categoryProcess,
 			},
 			&cli.StringFlag{
-				Name:     "output",
+				Name:     flagOutput,
 				Aliases:  []string{"o"},
-				Usage:    "output format: text, json",
+				Usage:    flagOutputUsage,
 				Value:    outputText,
 				Local:    true,
 				Category: categoryDisplay,
@@ -56,7 +56,7 @@ func infoAction(_ context.Context, cmd *cli.Command) error {
 
 	schedulerID := args[0]
 	version := cmd.String("version")
-	format := cmd.String("output")
+	format := cmd.String(flagOutput)
 
 	if format != outputText && format != outputJSON {
 		return fmt.Errorf("unsupported --output value %q (expected: %s, %s)", format, outputText, outputJSON)

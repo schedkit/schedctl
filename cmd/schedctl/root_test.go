@@ -10,6 +10,8 @@ import (
 	cmd "schedctl/cmd/schedctl"
 )
 
+const cmdList = "list"
+
 func lookupFlag(flags []cli.Flag, name string) cli.Flag {
 	for _, f := range flags {
 		for _, n := range f.Names() {
@@ -42,7 +44,7 @@ func TestNewRootCmd(t *testing.T) {
 func TestRootCmdHasSubcommands(t *testing.T) {
 	rootCmd := cmd.NewRootCmd()
 
-	expected := []string{"run", "ps", "stop", "list", "doctor", "status", "versions", "info"}
+	expected := []string{"run", "ps", "stop", cmdList, "doctor", "status", "versions", "info"}
 	for _, name := range expected {
 		assert.NotNil(t, findSubcommand(rootCmd, name), "Root command should have %s subcommand", name)
 	}

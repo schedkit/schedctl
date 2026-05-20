@@ -18,6 +18,11 @@ const (
 	outputJSON = "json"
 )
 
+const (
+	flagOutput      = "output"
+	flagOutputUsage = "output format: text, json"
+)
+
 func Execute() {
 	rootCmd := NewRootCmd()
 	if err := rootCmd.Run(context.Background(), os.Args); err != nil {

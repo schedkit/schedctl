@@ -20,9 +20,9 @@ func NewDoctorCmd() *cli.Command {
 			" Exits non-zero when any blocking check fails.",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:     "output",
+				Name:     flagOutput,
 				Aliases:  []string{"o"},
-				Usage:    "output format: text, json",
+				Usage:    flagOutputUsage,
 				Value:    outputText,
 				Local:    true,
 				Category: categoryDiagnostics,
@@ -35,7 +35,7 @@ func NewDoctorCmd() *cli.Command {
 func doctorAction(_ context.Context, cmd *cli.Command) error {
 	report := doctor.Run(doctor.DefaultChecks())
 
-	switch cmd.String("output") {
+	switch cmd.String(flagOutput) {
 	case outputJSON:
 		if err := doctor.WriteJSON(os.Stdout, report); err != nil {
 			return err
@@ -46,7 +46,7 @@ func doctorAction(_ context.Context, cmd *cli.Command) error {
 		}
 	default:
 		return fmt.Errorf("unsupported output format %q (expected %s or %s)",
-			cmd.String("output"), outputText, outputJSON)
+			cmd.String(flagOutput), outputText, outputJSON)
 	}
 
 	if report.HasBlockingFailures() {
