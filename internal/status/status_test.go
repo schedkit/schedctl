@@ -13,6 +13,11 @@ import (
 	"schedctl/internal/status"
 )
 
+const (
+	rustyContainer = "scx_rusty"
+	rustyOps       = "rusty"
+)
+
 func TestBuildIdle(t *testing.T) {
 	r := status.Build("podman", nil, sched_ext.State{Supported: true})
 
@@ -25,14 +30,14 @@ func TestBuildIdle(t *testing.T) {
 func TestBuildRunning(t *testing.T) {
 	started := time.Date(2026, 5, 2, 10, 0, 0, 0, time.UTC)
 	managed := []containers.Container{{
-		Name:      "scx_rusty",
+		Name:      rustyContainer,
 		ID:        "abc123",
 		PID:       4242,
 		Image:     "ghcr.io/sched-ext/scx_rusty:latest",
 		ImageID:   "sha256:cafebabe",
 		StartedAt: started,
 	}}
-	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: "rusty"}
+	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: rustyOps}
 
 	r := status.Build("podman", managed, kernel)
 
@@ -40,7 +45,7 @@ func TestBuildRunning(t *testing.T) {
 	assert.Empty(t, r.Discrepancy)
 	assert.False(t, r.IsDiscrepancy())
 	if assert.NotNil(t, r.Scheduler) {
-		assert.Equal(t, "scx_rusty", r.Scheduler.Name)
+		assert.Equal(t, rustyContainer, r.Scheduler.Name)
 		assert.Equal(t, "abc123", r.Scheduler.ContainerID)
 		assert.Equal(t, "ghcr.io/sched-ext/scx_rusty:latest", r.Scheduler.Image)
 		assert.Equal(t, "sha256:cafebabe", r.Scheduler.ImageID)
@@ -50,8 +55,8 @@ func TestBuildRunning(t *testing.T) {
 }
 
 func TestBuildRunningExactNameMatch(t *testing.T) {
-	managed := []containers.Container{{Name: "rusty"}}
-	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: "rusty"}
+	managed := []containers.Container{{Name: rustyOps}}
+	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: rustyOps}
 
 	r := status.Build("podman", managed, kernel)
 
@@ -59,17 +64,17 @@ func TestBuildRunningExactNameMatch(t *testing.T) {
 }
 
 func TestBuildOrphanedKernel(t *testing.T) {
-	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: "rusty"}
+	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: rustyOps}
 
 	r := status.Build("podman", nil, kernel)
 
 	assert.Equal(t, status.StatusOrphanedKernel, r.Status)
 	assert.True(t, r.IsDiscrepancy())
-	assert.Contains(t, r.Discrepancy, "rusty")
+	assert.Contains(t, r.Discrepancy, rustyOps)
 }
 
 func TestBuildManagedDetached(t *testing.T) {
-	managed := []containers.Container{{Name: "scx_rusty"}}
+	managed := []containers.Container{{Name: rustyContainer}}
 	kernel := sched_ext.State{Supported: true, Enabled: false, Ops: ""}
 
 	r := status.Build("podman", managed, kernel)
@@ -82,19 +87,19 @@ func TestBuildManagedDetached(t *testing.T) {
 // missing, leaving Enabled=false). The container name aligning with ops is
 // not enough to call this "running" — sched_ext itself is not enabled.
 func TestBuildManagedDetachedDisabledWithOps(t *testing.T) {
-	managed := []containers.Container{{Name: "scx_rusty"}}
-	kernel := sched_ext.State{Supported: true, Enabled: false, Ops: "rusty"}
+	managed := []containers.Container{{Name: rustyContainer}}
+	kernel := sched_ext.State{Supported: true, Enabled: false, Ops: rustyOps}
 
 	r := status.Build("podman", managed, kernel)
 
 	assert.Equal(t, status.StatusManagedDetached, r.Status)
 	assert.True(t, r.IsDiscrepancy())
-	assert.Contains(t, r.Discrepancy, "scx_rusty")
+	assert.Contains(t, r.Discrepancy, rustyContainer)
 }
 
 // Kernel reports enabled but no ops name. No scheduler is actually attached.
 func TestBuildManagedDetachedEnabledWithoutOps(t *testing.T) {
-	managed := []containers.Container{{Name: "scx_rusty"}}
+	managed := []containers.Container{{Name: rustyContainer}}
 	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: ""}
 
 	r := status.Build("podman", managed, kernel)
@@ -107,7 +112,7 @@ func TestBuildManagedDetachedEnabledWithoutOps(t *testing.T) {
 // running. Distinct detail message so the user is not told the kernel is
 // "detached" when in fact sched_ext is missing entirely.
 func TestBuildManagedDetachedKernelUnsupported(t *testing.T) {
-	managed := []containers.Container{{Name: "scx_rusty"}}
+	managed := []containers.Container{{Name: rustyContainer}}
 	kernel := sched_ext.State{Supported: false}
 
 	r := status.Build("podman", managed, kernel)
@@ -118,14 +123,14 @@ func TestBuildManagedDetachedKernelUnsupported(t *testing.T) {
 }
 
 func TestBuildManagedMismatch(t *testing.T) {
-	managed := []containers.Container{{Name: "scx_rusty"}}
+	managed := []containers.Container{{Name: rustyContainer}}
 	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: "lavd"}
 
 	r := status.Build("podman", managed, kernel)
 
 	assert.Equal(t, status.StatusManagedMismatch, r.Status)
 	assert.True(t, r.IsDiscrepancy())
-	assert.Contains(t, r.Discrepancy, "scx_rusty")
+	assert.Contains(t, r.Discrepancy, rustyContainer)
 	assert.Contains(t, r.Discrepancy, "lavd")
 }
 
@@ -133,7 +138,7 @@ func TestBuildManagedMismatch(t *testing.T) {
 // target triple, e.g. "rusty_1.1.0_x86_64_unknown_linux_gnu". The match must
 // not flag that as a discrepancy.
 func TestBuildRunningWithVersionedOps(t *testing.T) {
-	managed := []containers.Container{{Name: "scx_rusty"}}
+	managed := []containers.Container{{Name: rustyContainer}}
 	kernel := sched_ext.State{
 		Supported: true,
 		Enabled:   true,
@@ -150,7 +155,7 @@ func TestBuildRunningWithVersionedOps(t *testing.T) {
 // "rusty".
 func TestBuildRunningWithRandomSuffixedContainer(t *testing.T) {
 	managed := []containers.Container{{Name: "scx_rusty-a1b2c3"}}
-	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: "rusty"}
+	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: rustyOps}
 
 	r := status.Build("podman", managed, kernel)
 
@@ -159,16 +164,16 @@ func TestBuildRunningWithRandomSuffixedContainer(t *testing.T) {
 
 func TestBuildMultipleManaged(t *testing.T) {
 	managed := []containers.Container{
-		{Name: "scx_rusty"},
+		{Name: rustyContainer},
 		{Name: "scx_lavd"},
 	}
-	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: "rusty"}
+	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: rustyOps}
 
 	r := status.Build("podman", managed, kernel)
 
 	assert.Equal(t, status.StatusMultipleManaged, r.Status)
 	assert.True(t, r.IsDiscrepancy())
-	assert.Contains(t, r.Discrepancy, "scx_rusty")
+	assert.Contains(t, r.Discrepancy, rustyContainer)
 	assert.Contains(t, r.Discrepancy, "scx_lavd")
 }
 
@@ -176,14 +181,14 @@ func TestBuildMultipleManaged(t *testing.T) {
 // consumers (sked, user scripts) can rely on them.
 func TestJSONSchemaStability(t *testing.T) {
 	managed := []containers.Container{{
-		Name:      "scx_rusty",
+		Name:      rustyContainer,
 		ID:        "abc",
 		PID:       1,
 		Image:     "img",
 		ImageID:   "sha256:deadbeef",
 		StartedAt: time.Date(2026, 5, 2, 0, 0, 0, 0, time.UTC),
 	}}
-	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: "rusty"}
+	kernel := sched_ext.State{Supported: true, Enabled: true, Ops: rustyOps}
 
 	r := status.Build("podman", managed, kernel)
 

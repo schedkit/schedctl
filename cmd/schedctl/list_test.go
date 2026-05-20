@@ -16,7 +16,7 @@ func TestNewListCmd(t *testing.T) {
 	listCmd := cmd.NewListCmd()
 
 	assert.NotNil(t, listCmd)
-	assert.Equal(t, "list", listCmd.Name)
+	assert.Equal(t, cmdList, listCmd.Name)
 	assert.Equal(t, "list available schedulers", listCmd.Usage)
 }
 
@@ -27,7 +27,7 @@ func TestListCmdExecute(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	err := rootCmd.Run(context.Background(), []string{"schedctl", "list"})
+	err := rootCmd.Run(context.Background(), []string{"schedctl", cmdList})
 	w.Close()
 	os.Stdout = oldStdout
 

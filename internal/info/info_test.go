@@ -13,61 +13,73 @@ import (
 	"schedctl/internal/schedulers"
 )
 
+const (
+	rustyImage       = "ghcr.io/schedkit/scx_rusty:latest"
+	rustyDigest      = "sha256:abc"
+	rustyName        = "scx_rusty"
+	rustyDescription = "Rust user-space scheduler"
+	rustyDocs        = "https://example.com/docs"
+	rustySource      = "https://github.com/sched-ext/scx"
+	rustyVersion     = "1.0.0"
+	rustyKernelMin   = "6.12"
+	sparseImage      = "ghcr.io/example/sparse:latest"
+)
+
 func TestBuildPopulatesAllCuratedFields(t *testing.T) {
 	created := time.Date(2026, 4, 1, 12, 0, 0, 0, time.UTC)
 	img := schedulers.SchedulerImage{
-		ImageURI: "ghcr.io/schedkit/scx_rusty:latest",
+		ImageURI: rustyImage,
 		Source:   schedulers.SourceManifest,
 	}
 	raw := schedulers.ImageInfo{
-		ImageRef:     "ghcr.io/schedkit/scx_rusty:latest",
-		Digest:       "sha256:abc",
+		ImageRef:     rustyImage,
+		Digest:       rustyDigest,
 		Created:      &created,
 		Architecture: "amd64",
 		OS:           "linux",
 		Labels: map[string]string{
-			info.LabelTitle:         "scx_rusty",
-			info.LabelDescription:   "Rust user-space scheduler",
-			info.LabelDocumentation: "https://example.com/docs",
-			info.LabelSource:        "https://github.com/sched-ext/scx",
-			info.LabelVersion:       "1.0.0",
+			info.LabelTitle:         rustyName,
+			info.LabelDescription:   rustyDescription,
+			info.LabelDocumentation: rustyDocs,
+			info.LabelSource:        rustySource,
+			info.LabelVersion:       rustyVersion,
 			info.LabelRevision:      "deadbee",
 			info.LabelAuthors:       "scx team",
 			info.LabelLicenses:      "GPL-2.0",
 			info.LabelVendor:        "schedkit",
-			info.LabelKernelMin:     "6.12",
+			info.LabelKernelMin:     rustyKernelMin,
 		},
 	}
 
-	r := info.Build("scx_rusty", img, raw)
+	r := info.Build(rustyName, img, raw)
 
 	assert.Equal(t, info.SchemaVersion, r.SchemaVersion)
-	assert.Equal(t, "scx_rusty", r.Scheduler)
+	assert.Equal(t, rustyName, r.Scheduler)
 	assert.Equal(t, "manifest", r.Source)
-	assert.Equal(t, "ghcr.io/schedkit/scx_rusty:latest", r.ImageRef)
-	assert.Equal(t, "sha256:abc", r.Digest)
+	assert.Equal(t, rustyImage, r.ImageRef)
+	assert.Equal(t, rustyDigest, r.Digest)
 	assert.Equal(t, &created, r.Created)
 	assert.Equal(t, "amd64", r.Architecture)
 	assert.Equal(t, "linux", r.OS)
-	assert.Equal(t, "scx_rusty", r.Title)
-	assert.Equal(t, "Rust user-space scheduler", r.Description)
-	assert.Equal(t, "https://example.com/docs", r.Documentation)
-	assert.Equal(t, "https://github.com/sched-ext/scx", r.SourceURL)
-	assert.Equal(t, "1.0.0", r.Version)
+	assert.Equal(t, rustyName, r.Title)
+	assert.Equal(t, rustyDescription, r.Description)
+	assert.Equal(t, rustyDocs, r.Documentation)
+	assert.Equal(t, rustySource, r.SourceURL)
+	assert.Equal(t, rustyVersion, r.Version)
 	assert.Equal(t, "deadbee", r.Revision)
 	assert.Equal(t, "scx team", r.Authors)
 	assert.Equal(t, "GPL-2.0", r.Licenses)
 	assert.Equal(t, "schedkit", r.Vendor)
-	assert.Equal(t, "6.12", r.KernelMin)
+	assert.Equal(t, rustyKernelMin, r.KernelMin)
 }
 
 func TestBuildOmitsMissingLabels(t *testing.T) {
 	img := schedulers.SchedulerImage{
-		ImageURI: "ghcr.io/example/sparse:latest",
+		ImageURI: sparseImage,
 		Source:   schedulers.SourceDirect,
 	}
 	raw := schedulers.ImageInfo{
-		ImageRef: "ghcr.io/example/sparse:latest",
+		ImageRef: sparseImage,
 		Labels: map[string]string{
 			info.LabelTitle: "sparse",
 		},
@@ -103,11 +115,11 @@ func TestBuildWithEmptyLabelMap(t *testing.T) {
 func TestWriteJSONOmitsEmptyFields(t *testing.T) {
 	r := info.Report{
 		SchemaVersion: info.SchemaVersion,
-		Scheduler:     "scx_rusty",
+		Scheduler:     rustyName,
 		Source:        "manifest",
-		ImageRef:      "ghcr.io/schedkit/scx_rusty:latest",
-		Digest:        "sha256:abc",
-		Title:         "scx_rusty",
+		ImageRef:      rustyImage,
+		Digest:        rustyDigest,
+		Title:         rustyName,
 	}
 	var buf bytes.Buffer
 	err := info.WriteJSON(&buf, r)
@@ -116,8 +128,8 @@ func TestWriteJSONOmitsEmptyFields(t *testing.T) {
 	var decoded map[string]any
 	assert.NoError(t, json.Unmarshal(buf.Bytes(), &decoded))
 	assert.Equal(t, "1", decoded["schema_version"])
-	assert.Equal(t, "scx_rusty", decoded["scheduler"])
-	assert.Equal(t, "sha256:abc", decoded["digest"])
+	assert.Equal(t, rustyName, decoded["scheduler"])
+	assert.Equal(t, rustyDigest, decoded["digest"])
 	_, hasEmpty := decoded["description"]
 	assert.False(t, hasEmpty, "empty fields should be omitted from JSON")
 	_, hasKernel := decoded["kernel_min_version"]
@@ -126,29 +138,29 @@ func TestWriteJSONOmitsEmptyFields(t *testing.T) {
 
 func TestWriteTextIncludesKeyFields(t *testing.T) {
 	r := info.Report{
-		Scheduler:     "scx_rusty",
-		Title:         "scx_rusty",
-		Description:   "Rust user-space scheduler",
-		ImageRef:      "ghcr.io/schedkit/scx_rusty:latest",
-		Digest:        "sha256:abc",
-		KernelMin:     "6.12",
-		Documentation: "https://example.com/docs",
-		SourceURL:     "https://github.com/sched-ext/scx",
-		Version:       "1.0.0",
+		Scheduler:     rustyName,
+		Title:         rustyName,
+		Description:   rustyDescription,
+		ImageRef:      rustyImage,
+		Digest:        rustyDigest,
+		KernelMin:     rustyKernelMin,
+		Documentation: rustyDocs,
+		SourceURL:     rustySource,
+		Version:       rustyVersion,
 	}
 	var buf bytes.Buffer
 	info.WriteText(&buf, r)
 	out := buf.String()
 
 	for _, want := range []string{
-		"scx_rusty",
-		"Rust user-space scheduler",
-		"ghcr.io/schedkit/scx_rusty:latest",
-		"sha256:abc",
-		"6.12",
-		"https://example.com/docs",
-		"https://github.com/sched-ext/scx",
-		"1.0.0",
+		rustyName,
+		rustyDescription,
+		rustyImage,
+		rustyDigest,
+		rustyKernelMin,
+		rustyDocs,
+		rustySource,
+		rustyVersion,
 	} {
 		assert.True(t, strings.Contains(out, want), "expected text output to contain %q", want)
 	}

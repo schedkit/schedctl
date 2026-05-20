@@ -34,9 +34,9 @@ Exit codes:
 See schedctl-status(1) for the full JSON schema.`,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:     "output",
+				Name:     flagOutput,
 				Aliases:  []string{"o"},
-				Usage:    "output format: text, json",
+				Usage:    flagOutputUsage,
 				Value:    outputText,
 				Local:    true,
 				Category: categoryDisplay,
@@ -48,7 +48,7 @@ See schedctl-status(1) for the full JSON schema.`,
 
 func statusAction(_ context.Context, cmd *cli.Command) error {
 	driver := cmd.String("driver")
-	format := cmd.String("output")
+	format := cmd.String(flagOutput)
 
 	if format != outputText && format != outputJSON {
 		return fmt.Errorf("unsupported --output value %q (expected: %s, %s)", format, outputText, outputJSON)
