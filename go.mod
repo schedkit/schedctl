@@ -8,7 +8,7 @@ require (
 	github.com/containers/podman/v5 v5.8.2
 	github.com/google/go-containerregistry v0.21.6
 	github.com/sigstore/cosign/v2 v2.6.3
-	github.com/sigstore/sigstore v1.10.7
+	github.com/sigstore/sigstore v1.10.8
 	github.com/sigstore/sigstore-go v1.1.4
 	github.com/stretchr/testify v1.11.1
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
@@ -197,6 +197,7 @@ require (
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/vbatts/tar-split v0.12.2 // indirect
 	github.com/vbauerster/mpb/v8 v8.10.2 // indirect
+	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.podman.io/common v0.67.1 // indirect
 	go.podman.io/image/v5 v5.39.2 // indirect
