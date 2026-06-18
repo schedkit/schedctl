@@ -6,7 +6,7 @@ require (
 	github.com/anatol/vmtest v0.0.0-20230711210602-87511df0d4bc
 	github.com/containerd/containerd/v2 v2.2.0
 	github.com/containers/podman/v5 v5.8.3
-	github.com/google/go-containerregistry v0.21.6
+	github.com/google/go-containerregistry v0.21.7
 	github.com/sigstore/cosign/v2 v2.6.3
 	github.com/sigstore/sigstore v1.10.8
 	github.com/sigstore/sigstore-go v1.2.1
@@ -97,7 +97,7 @@ require (
 	github.com/digitorus/pkcs7 v0.0.0-20230818184609-3a137a874352 // indirect
 	github.com/digitorus/timestamp v0.0.0-20231217203849-220c5c2851b7 // indirect
 	github.com/disiqueira/gotree/v3 v3.0.2 // indirect
-	github.com/docker/cli v29.4.3+incompatible // indirect
+	github.com/docker/cli v29.5.3+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker v28.5.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.4 // indirect
@@ -207,7 +207,7 @@ require (
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/mod v0.36.0 // indirect
+	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/term v0.44.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
