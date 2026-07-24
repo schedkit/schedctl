@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
+	specs "github.com/opencontainers/runtime-spec/specs-go"
 	"go.podman.io/podman/v6/pkg/bindings"
 	podman_containers "go.podman.io/podman/v6/pkg/bindings/containers"
 	"go.podman.io/podman/v6/pkg/bindings/images"
 	"go.podman.io/podman/v6/pkg/specgen"
-	specs "github.com/opencontainers/runtime-spec/specs-go"
 
 	"schedctl/internal/containers"
 )
