@@ -5,7 +5,7 @@ go 1.26.3
 require (
 	github.com/anatol/vmtest v0.0.0-20230711210602-87511df0d4bc
 	github.com/containerd/containerd/v2 v2.3.3
-	github.com/google/go-containerregistry v0.21.7
+	github.com/google/go-containerregistry v0.21.8
 	github.com/sigstore/cosign/v2 v2.6.4
 	github.com/sigstore/sigstore v1.10.8
 	github.com/sigstore/sigstore-go v1.3.0
@@ -40,7 +40,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
-	github.com/klauspost/compress v1.18.6 // indirect
+	github.com/klauspost/compress v1.19.1 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/sys/mountinfo v0.7.2 // indirect
 	github.com/moby/sys/sequential v0.6.0 // indirect
@@ -97,7 +97,7 @@ require (
 	github.com/digitorus/pkcs7 v0.0.0-20230818184609-3a137a874352 // indirect
 	github.com/digitorus/timestamp v0.0.0-20231217203849-220c5c2851b7 // indirect
 	github.com/disiqueira/gotree/v3 v3.0.2 // indirect
-	github.com/docker/cli v29.5.3+incompatible // indirect
+	github.com/docker/cli v29.6.2+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.7 // indirect
 	github.com/docker/go-connections v0.7.0 // indirect
@@ -161,8 +161,8 @@ require (
 	github.com/moby/buildkit v0.30.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/go-archive v0.2.0 // indirect
-	github.com/moby/moby/api v1.54.2 // indirect
-	github.com/moby/moby/client v0.4.1 // indirect
+	github.com/moby/moby/api v1.55.0 // indirect
+	github.com/moby/moby/client v0.5.1 // indirect
 	github.com/moby/patternmatcher v0.6.1 // indirect
 	github.com/moby/sys/capability v0.4.0 // indirect
 	github.com/moby/sys/devices v0.1.0 // indirect
