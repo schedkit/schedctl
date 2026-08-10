@@ -1,6 +1,7 @@
 package verify
 
 import (
+	"bytes"
 	"context"
 	"crypto"
 	"crypto/sha256"
@@ -14,9 +15,9 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"github.com/sigstore/cosign/v2/pkg/oci"
+	"github.com/sigstore/sigstore-go/pkg/tuf"
 	sgverify "github.com/sigstore/sigstore-go/pkg/verify"
 	"github.com/sigstore/sigstore/pkg/cryptoutils"
-	"github.com/sigstore/sigstore/pkg/fulcioroots"
 	"github.com/sigstore/sigstore/pkg/signature"
 )
 
@@ -123,14 +124,12 @@ func verifyByIdentities(ctx context.Context, ref name.Digest, policy Policy) (Si
 		// Fall back to discrete trust material when TUF is unavailable. The
 		// new-bundle format requires TrustedMaterial and will fail below
 		// with a clear message.
-		roots, rerr := fulcioroots.Get()
-		if rerr != nil {
-			return Signer{}, fmt.Errorf("trusted root unavailable (fulcio fallback also failed): %w", errors.Join(err, rerr))
+		roots, intermediates, ferr := fulcioRootsFromTUF()
+		if ferr != nil {
+			return Signer{}, fmt.Errorf("trusted root unavailable (fulcio fallback also failed): %w", errors.Join(err, ferr))
 		}
 		co.RootCerts = roots
-		if intermediates, ierr := fulcioroots.GetIntermediates(); ierr == nil {
-			co.IntermediateCerts = intermediates
-		}
+		co.IntermediateCerts = intermediates
 		rekorPubs, perr := cosign.GetRekorPubs(ctx)
 		if perr != nil {
 			return Signer{}, fmt.Errorf("rekor public keys: %w", perr)
@@ -179,6 +178,55 @@ func verifyByIdentities(ctx context.Context, ref name.Digest, policy Policy) (Si
 		return Signer{}, errors.New("no valid signatures")
 	}
 	return signerFromLegacySignature(sigs[0])
+}
+
+// fulcioRootsFromTUF fetches the Fulcio root and intermediate certificates
+// from the Sigstore TUF repository using the sigstore-go client. Roots are
+// self-signed certificates; everything else is treated as an intermediate CA.
+// This replaces the deprecated sigstore/pkg/fulcioroots package.
+func fulcioRootsFromTUF() (*x509.CertPool, *x509.CertPool, error) {
+	client, err := tuf.DefaultClient()
+	if err != nil {
+		return nil, nil, fmt.Errorf("initialize TUF client: %w", err)
+	}
+	roots := x509.NewCertPool()
+	intermediates := x509.NewCertPool()
+	var lastErr error
+	found := false
+	// The legacy root ("fulcio.crt.pem"), the v1 migrated root
+	// ("fulcio_v1.crt.pem"), and the untrusted v1 intermediate CA
+	// ("fulcio_intermediate_v1.crt.pem") used for chain building.
+	for _, target := range []string{
+		"fulcio.crt.pem",
+		"fulcio_v1.crt.pem",
+		"fulcio_intermediate_v1.crt.pem",
+	} {
+		data, terr := client.GetTarget(target)
+		if terr != nil {
+			lastErr = terr
+			continue
+		}
+		certs, cerr := cryptoutils.UnmarshalCertificatesFromPEM(data)
+		if cerr != nil {
+			lastErr = fmt.Errorf("parse %q: %w", target, cerr)
+			continue
+		}
+		found = true
+		for _, cert := range certs {
+			if bytes.Equal(cert.RawSubject, cert.RawIssuer) {
+				roots.AddCert(cert)
+			} else {
+				intermediates.AddCert(cert)
+			}
+		}
+	}
+	if found {
+		return roots, intermediates, nil
+	}
+	if lastErr == nil {
+		lastErr = errors.New("no Fulcio certificates found")
+	}
+	return nil, nil, lastErr
 }
 
 func signerFromVerificationResult(res *sgverify.VerificationResult) Signer {
