@@ -156,7 +156,7 @@ require (
 	github.com/mistifyio/go-zfs/v4 v4.0.0 // indirect
 	github.com/moby/buildkit v0.31.2 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
-	github.com/moby/go-archive v0.2.0 // indirect
+	github.com/moby/go-archive v0.3.0 // indirect
 	github.com/moby/moby/api v1.55.0 // indirect
 	github.com/moby/moby/client v0.5.1 // indirect
 	github.com/moby/patternmatcher v0.6.1 // indirect
