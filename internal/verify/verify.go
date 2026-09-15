@@ -299,7 +299,7 @@ func keyFingerprint(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	der, err := cryptoutils.MarshalPublicKeyToDER(pub)
+	der, err := x509.MarshalPKIXPublicKey(pub)
 	if err != nil {
 		return "", err
 	}
