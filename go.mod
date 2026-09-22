@@ -8,7 +8,7 @@ require (
 	github.com/google/go-containerregistry v0.22.1
 	github.com/opencontainers/runtime-spec v1.3.0
 	github.com/sigstore/cosign/v2 v2.6.5
-	github.com/sigstore/sigstore v1.10.10
+	github.com/sigstore/sigstore v1.11.0
 	github.com/sigstore/sigstore-go v1.3.0
 	github.com/stretchr/testify v1.12.1
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
