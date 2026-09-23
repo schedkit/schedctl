@@ -14,7 +14,7 @@ require (
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
 	github.com/urfave/cli-docs/v3 v3.1.0
 	github.com/urfave/cli/v3 v3.12.0
-	go.podman.io/podman/v6 v6.1.1
+	go.podman.io/podman/v6 v6.1.2
 	golang.org/x/crypto v0.57.0
 	golang.org/x/sys v0.48.0
 	sigs.k8s.io/yaml v1.6.0
@@ -193,10 +193,10 @@ require (
 	go.opentelemetry.io/otel/metric v1.46.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.46.0 // indirect
 	go.opentelemetry.io/otel/trace v1.46.0 // indirect
-	go.podman.io/buildah v1.45.0 // indirect
-	go.podman.io/common v0.69.1 // indirect
-	go.podman.io/image/v5 v5.41.1 // indirect
-	go.podman.io/storage v1.64.0 // indirect
+	go.podman.io/buildah v1.45.1 // indirect
+	go.podman.io/common v0.69.2 // indirect
+	go.podman.io/image/v5 v5.41.2 // indirect
+	go.podman.io/storage v1.64.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
