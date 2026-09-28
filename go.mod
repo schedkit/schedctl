@@ -4,7 +4,7 @@ go 1.27.1
 
 require (
 	github.com/anatol/vmtest v0.0.0-20230711210602-87511df0d4bc
-	github.com/containerd/containerd/v2 v2.4.0
+	github.com/containerd/containerd/v2 v2.4.1
 	github.com/google/go-containerregistry v0.22.1
 	github.com/opencontainers/runtime-spec v1.3.0
 	github.com/sigstore/cosign/v2 v2.6.5
