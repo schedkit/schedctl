@@ -1,0 +1,53 @@
+version: 2
+
+project_name: schedctl
+
+dist: dist/release
+
+builds:
+  - id: schedctl
+    main: .
+    binary: schedctl
+    env:
+      - CGO_ENABLED=0
+    tags:
+      - containers_image_openpgp
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - id: schedctl
+    formats:
+      - binary
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  algorithm: sha256
+
+sboms:
+  - artifacts: binary
+    documents:
+      - "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.spdx.json"
+
+signs:
+  - cmd: cosign
+    artifacts: all
+    signature: "${artifact}.sigstore.json"
+    args:
+      - sign-blob
+      - "--bundle=${signature}"
+      - "${artifact}"
+      - "--yes"
+
+release:
+  prerelease: auto
+  mode: keep-existing
+  replace_existing_artifacts: true
