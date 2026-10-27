@@ -58,7 +58,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get -y install libbtrfs-dev qemu-system qemu-kvm qemu-utils
+        sudo apt-get -y install libbtrfs-dev qemu-system qemu-system-x86 qemu-utils
 
     - name: Enable KVM group perms
       run: |
