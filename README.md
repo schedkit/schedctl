@@ -18,6 +18,41 @@ sudo zypper in schedctl
 paru -S schedctl
 ```
 
+### Prebuilt binaries
+
+Releases include static Linux binaries for x86_64 (`amd64`) and `arm64`, an
+SPDX SBOM for each binary, and a checksums file. The binaries, SBOMs, and
+checksums are signed with
+[Cosign](https://docs.sigstore.dev/cosign/system_config/installation/) using
+GitHub Actions OIDC. The commands below assume Cosign 3.x.
+
+Download a release:
+
+```sh
+tag=v1.3.1
+gh release download "$tag" --repo schedkit/schedctl
+```
+
+Verify the signatures:
+
+```sh
+tag=v1.3.1
+identity="https://github.com/schedkit/schedctl/.github/workflows/release.yml@refs/tags/$tag"
+for bundle in *.sigstore.json; do
+  cosign verify-blob \
+    --bundle "$bundle" \
+    --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+    --certificate-identity "$identity" \
+    "${bundle%.sigstore.json}"
+done
+```
+
+Then check the files against the checksums:
+
+```sh
+sha256sum --check --ignore-missing schedctl_*_checksums.txt
+```
+
 ## Container engine setup
 
 ### Podman
