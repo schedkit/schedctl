@@ -12,7 +12,7 @@ require (
 	github.com/sigstore/sigstore-go v1.4.0
 	github.com/stretchr/testify v1.12.1
 	github.com/tmc/scp v0.0.0-20170824174625-f7b48647feef
-	github.com/urfave/cli-docs/v3 v3.1.0
+	github.com/urfave/cli-docs/v3 v3.2.0
 	github.com/urfave/cli/v3 v3.14.0
 	go.podman.io/podman/v6 v6.1.4
 	golang.org/x/crypto v0.58.0
