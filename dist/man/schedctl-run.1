@@ -39,13 +39,13 @@ schedctl run SCHEDULER [-- ARGS...]
 
 
 .SH GLOBAL OPTIONS
-\fB--allow-unsigned\fP: skip signature verification (NOT recommended; images run with elevated caps and load eBPF)
+\fB--allow-unsigned\fP: skip signature verification (NOT recommended; images run with elevated caps and load eBPF) (default: false)
 
 .PP
-\fB--attach, -a\fP: attach to the current process instead of detaching
+\fB--attach, -a\fP: attach to the current process instead of detaching (default: false)
 
 .PP
-\fB--driver, -d\fP="": container runtime to use: containerd, podman (default: "podman")
+\fB--driver, -d\fP="": container runtime to use: containerd, podman (default: podman)
 
 .PP
 \fB--trust-policy\fP="": path to a YAML trust policy for image signature verification
