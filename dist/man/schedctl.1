@@ -25,7 +25,7 @@ schedctl [GLOBAL OPTIONS] [command [COMMAND OPTIONS]] [ARGUMENTS...]
 
 
 .SH GLOBAL OPTIONS
-\fB--driver, -d\fP="": container runtime to use: containerd, podman (default: "podman")
+\fB--driver, -d\fP="": container runtime to use: containerd, podman (default: podman)
 
 
 .SH COMMANDS
@@ -36,10 +36,10 @@ list available schedulers
 Run a specific scheduler
 
 .PP
-\fB--allow-unsigned\fP: skip signature verification (NOT recommended; images run with elevated caps and load eBPF)
+\fB--allow-unsigned\fP: skip signature verification (NOT recommended; images run with elevated caps and load eBPF) (default: false)
 
 .PP
-\fB--attach, -a\fP: attach to the current process instead of detaching
+\fB--attach, -a\fP: attach to the current process instead of detaching (default: false)
 
 .PP
 \fB--trust-policy\fP="": path to a YAML trust policy for image signature verification
@@ -57,13 +57,13 @@ stop a scheduler
 report what schedctl is managing and the kernel sched_ext state
 
 .PP
-\fB--output, -o\fP="": output format: text, json (default: "text")
+\fB--output, -o\fP="": output format: text, json (default: text)
 
 .SH doctor
 check host readiness for sched_ext schedulers
 
 .PP
-\fB--output, -o\fP="": output format: text, json (default: "text")
+\fB--output, -o\fP="": output format: text, json (default: text)
 
 .SH versions
 list available versions for a scheduler
@@ -72,7 +72,7 @@ list available versions for a scheduler
 show metadata for a scheduler image
 
 .PP
-\fB--output, -o\fP="": output format: text, json (default: "text")
+\fB--output, -o\fP="": output format: text, json (default: text)
 
 .PP
 \fB--version\fP="": image tag to inspect, e.g. v1.0.0
