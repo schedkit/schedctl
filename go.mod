@@ -16,7 +16,7 @@ require (
 	github.com/urfave/cli/v3 v3.14.0
 	go.podman.io/podman/v6 v6.1.4
 	golang.org/x/crypto v0.58.0
-	golang.org/x/sys v0.49.0
+	golang.org/x/sys v0.50.0
 	sigs.k8s.io/yaml v1.6.0
 )
 
